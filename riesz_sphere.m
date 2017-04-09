@@ -1,20 +1,38 @@
-function riesz_sphere
-
+function cnf = riesz_sphere(cnf,N,dim,s)
+%RIESZ_SPHERE
+% cnf = riesz_sphere(cnf,N,dim,s)
+% Returns a configuration obtained from applying the gradient descent to
+% the given (or random) N-point collection on the unit sphere.
+% 
+% cnf -- pass your initial configuration as a matrix (dim)x(#of points)
+%   here; 
+%   pass ZERO to use all default settings;
+%   pass ONE to draw from the Gaussian random distribution using your N,dim,s;
+% N -- number of points in the random configuration to be generated
+%   (ignored if an initial cnf is being passed);
+% dim -- dimension of the ambient space; deduced from the first dimension
+%   of the cnf matrix, if any;
+% s -- exponent in the Riesz energy to be minimized; default value is 6.0.
+if cnf==0 || cnf==1
+    dim = cnf*dim + (1-cnf)*3;
+    s = cnf*s + (1-cnf)*6.0;
+    N = cnf*N + (1-cnf)*10000;
+    cnf = randn(dim,N); 
+else
+    dim = size(cnf,1);
+    N = size(cnf,2);
+end
 k_value = 20;  
-dim = 3;
-s = 6;
-N = 10000;
 repel_steps = 200;
-% cnf = randn(dim,N); 
-% cnf = cnf./sqrt(sum(cnf.^2,1));
+fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
+fprintf( '\n%d-dimensional unit sphere.\n\n', dim-1)
+% double-check we're on the sphere:
+cnf = cnf./sqrt(sum(cnf.^2,1));
 % - this is faster than normc in Matlab 2016b
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
 pbaspect([1 1 1])
-colormap(winter)
-[x,y,z] = sphere(30);
-mesh(x,y,z)
-hold on
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
 
@@ -42,7 +60,18 @@ for cycle=1:10
     end
     toc
 end
-[IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-step = min(D(:,2));
-plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',7)
+% [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
+% step = min(D(:,2));
+if dim==3
+    colormap(winter)
+    [x,y,z] = sphere(30);
+    mesh(x,y,z)
+    hold on
+    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',7)
+else
+    if dim==2
+        plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',4)
+    end
+end
+
 % dlmwrite('cnf.out',cnf','delimiter','\t');

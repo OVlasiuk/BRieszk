@@ -1,3 +1,11 @@
-* BRieszk
+# BRieszk
 
-is a collection of (Matlab for now) routines that minimize the Riesz energy of N-point configurations fairly quickly.
+BRIESZK ('brisk') is a collection of (Matlab for now) routines that minimize the Riesz energy of N-point configurations, and do so fairly quickly. It was written for personal and internal use at the Vanderbilt University MinEnergy group.
+To see details about a specific function, type *help name_of_the_function* in Matlab prompt while in the BRieszk folder.
+
+DISCLAIMER: if any of these routines performs fast, it is only due to all the calculations being done in a (possibly, very) sloppy manner. The end result is by no means guaranteed to be a minimizer, even a local one. If you're lucky, it may be _somewhat close_ to a minimizer, whatever 'close' could mean here.
+
+## List of functions:
+* riesz_sphere(cnf,N,dim,s)
+* riesz_torus(cnf,N,s,r,R)
+* torus_inversion(x,y,z,r,R)
