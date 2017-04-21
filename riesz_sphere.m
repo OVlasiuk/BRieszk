@@ -19,8 +19,9 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit)
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
 if cnf==0 || cnf==1
     dim = cnf*dim + (1-cnf)*3;
-    s = cnf*s + (1-cnf)*6.0;
+    s = cnf*s + (1-cnf)*5.0;
     N = cnf*N + (1-cnf)*10000;
+    plotit = cnf*plotit + (1-cnf)*1;
     cnf = randn(dim,N); 
 else
     dim = size(cnf,1);
@@ -90,4 +91,4 @@ else
     end
 end
 
-% dlmwrite('cnf.out',cnf','delimiter','\t');
+% dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)
