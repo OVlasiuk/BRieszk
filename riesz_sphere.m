@@ -3,10 +3,11 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit)
 % cnf = riesz_sphere(cnf,N,dim,s)
 % Returns a configuration obtained from applying the gradient descent to
 % the given (or random) N-point collection on the unit sphere.
+% Call without input arguments to use the defaults.
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
-%   pass ZERO to use all default settings;
-%   pass ONE to draw from the Gaussian random distribution using your N,dim,s;
+%   pass ZERO to draw from the Gaussian random distribution using your 
+%   N,dim,s;
 % N -- number of points in the random configuration to be generated
 %   (ignored if an initial cnf is being passed);
 % dim -- dimension of the ambient space; deduced from the first dimension
@@ -17,11 +18,15 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit)
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
+if ~exist('cnf','var')
+    cnf = 1;
+    N = 1000;
+    dim = 3;
+    s = 5.0;
+    plotit = 1;
+end
 if cnf==0 || cnf==1
-    dim = cnf*dim + (1-cnf)*3;
-    s = cnf*s + (1-cnf)*5.0;
-    N = cnf*N + (1-cnf)*10000;
-    plotit = cnf*plotit + (1-cnf)*1;
+    fprintf( '\nStarting with a random point set.')
     cnf = randn(dim,N); 
 else
     dim = size(cnf,1);
@@ -79,15 +84,16 @@ end
     
 % [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 % step = min(D(:,2));
+msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && (plotit=='y' || plotit=='Y' || plotit==1)
     colormap(winter)
     [x,y,z] = sphere(30);
     mesh(x,y,z)
     hold on
-    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',7)
+    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
 else
     if dim==2 && (plotit=='y' || plotit=='Y' || plotit==1)
-        plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',4)
+        plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
 
