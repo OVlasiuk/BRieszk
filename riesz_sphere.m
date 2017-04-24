@@ -1,6 +1,6 @@
 function cnf = riesz_sphere(cnf,N,dim,s,plotit)
 %RIESZ_SPHERE
-% cnf = riesz_sphere(cnf,N,dim,s)
+% cnf = riesz_sphere(cnf,N,dim,s,plotit)
 % Returns a configuration obtained from applying the gradient descent to
 % the given (or random) N-point collection on the unit sphere.
 % Call without input arguments to use the defaults.
@@ -32,24 +32,31 @@ else
     dim = size(cnf,1);
     N = size(cnf,2);
 end
-if s==5.0
-    compute_weights = @(x) 1./x./x./x;
-else
-    if s==0.5
-        compute_weights = @(x) 1./x./sqrt(x);
-    else
-        compute_weights = @(x) sqrt(x).^(-s-1);
-    end
+switch s
+    case 5.0
+        compute_weights = @(x) 1./x./x./x;
+    case 2.5
+        compute_weights = @(x) 1./x./sqrt(x)./sqrt(sqrt(x));
+    case 0.5
+        compute_weights = @(x) 1./sqrt(x)./sqrt(sqrt(x));
+    otherwise
+        compute_weights = @(x) sqrt(x).^(-s-1);     
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-k_value = 20;  
-repel_steps = 200;
-repel_cycles = 10;
+if s < dim
+    k_value = N-1;  
+    repel_steps = 100;
+    repel_cycles = 5;
+else
+    k_value = 6 * dim;
+    repel_steps = 200;
+    repel_cycles = 10;
+end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
 fprintf( '\n%d-dimensional unit sphere.\n\n', dim-1)
 % double-check we're on the sphere:
-cnf = cnf./sqrt(sum(cnf.^2,1));
+cnf = cnf./sqrt(sum(cnf.*cnf,1));
 % - this is faster than normc in Matlab 2016b
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -59,14 +66,21 @@ pbaspect([1 1 1])
 % plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
 
 for cycle=1:repel_cycles
-    [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-    IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
-    step = min(D(:,2));
+    if s>=dim || cycle==1
+        [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
+        IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
+        step = min(D(:,2));
+    else
+        if cycle<3
+            [~, D] = knnsearch(cnf', cnf', 'k', 2);
+            step = min(D(:,2));
+        end
+    end
     tic
     for iter=1:repel_steps
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
-        knn_norms = sum(knn_differences.^2,1);
+        knn_norms = sum(knn_differences.*knn_differences,1);
         riesz_weights = compute_weights(knn_norms);
         directions = bsxfun(@times,riesz_weights,knn_differences);
         directions = reshape(directions, dim, k_value, []);
@@ -77,7 +91,7 @@ for cycle=1:repel_cycles
         % sphere
         tangents = tangents/max(sqrt(sum(tangents.^2,1)));
         cnf = cnf + tangents * step/3/cycle;%/iter
-        cnf = cnf./sqrt(sum(cnf.^2,1));
+        cnf = cnf./sqrt(sum(cnf.*cnf,1));
     end
     toc
 end
