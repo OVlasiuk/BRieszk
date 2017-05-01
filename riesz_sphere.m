@@ -1,6 +1,6 @@
-function cnf = riesz_sphere(cnf,N,dim,s,plotit)
+function cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 %RIESZ_SPHERE
-% cnf = riesz_sphere(cnf,N,dim,s,plotit)
+% cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 % Returns a configuration obtained from applying the gradient descent to
 % the given (or random) N-point collection on the unit sphere.
 % Call without input arguments to use the defaults.
@@ -18,15 +18,19 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit)
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
+% silent -- pass 'y' or 1, etc., to suppress output to console.
 if ~exist('cnf','var')
     cnf = 1;
     N = 1000;
     dim = 3;
     s = 5.0;
     plotit = 1;
+    silent = false;
 end
 if cnf==0 || cnf==1
-    fprintf( '\nStarting with a random point set.')
+    if ~exist('silent','var') || ~silent
+        fprintf( '\nStarting with a random point set.')
+    end
     cnf = randn(dim,N); 
 else
     dim = size(cnf,1);
@@ -53,15 +57,16 @@ else
     repel_cycles = 10;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
-fprintf( '\n%d-dimensional unit sphere.\n\n', dim-1)
+if ~exist('silent','var') || ~silent
+    fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
+    fprintf( '\n%d-dimensional unit sphere.\n\n', dim-1)
+end
 % double-check we're on the sphere:
 cnf = cnf./sqrt(sum(cnf.*cnf,1));
 % - this is faster than normc in Matlab 2016b
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
-pbaspect([1 1 1])
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
 
@@ -93,20 +98,24 @@ for cycle=1:repel_cycles
         cnf = cnf + tangents * step/3/cycle;%/iter
         cnf = cnf./sqrt(sum(cnf.*cnf,1));
     end
-    toc
+    if ~exist('silent','var') || ~silent
+        toc
+    end
 end
     
 % [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 % step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
-if dim==3 && (plotit=='y' || plotit=='Y' || plotit==1)
+if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
+    pbaspect([1 1 1]);
     colormap(winter)
     [x,y,z] = sphere(30);
     mesh(x,y,z)
     hold on
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
 else
-    if dim==2 && (plotit=='y' || plotit=='Y' || plotit==1)
+    if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
+        pbaspect([1 1 1]);
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
