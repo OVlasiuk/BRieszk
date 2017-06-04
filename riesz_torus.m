@@ -7,8 +7,8 @@ function cnf = riesz_torus(cnf,N,s,r,R)
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points)
 %   here; 
-%  a) pass ZERO to use all default settings (cnf, 10000, 6, 1, 3), cnf as 
-%   below;
+%  a) call without input arguments to use all the default settings 
+%   (cnf, 10000, 6, 1, 3), cnf random as below;
 %  b) pass ONE to draw from the uniform distribution IN ANGULAR measure 
 %   (d\phi \times d\psi) using your values of N,s,r,R;
 % N -- number of points in the random configuration to be generated
@@ -16,11 +16,31 @@ function cnf = riesz_torus(cnf,N,s,r,R)
 % s -- exponent in the Riesz energy to be minimized; default value is 6.0;
 % r -- minor radius of the torus;
 % R -- major radius of the torus.
-dim = 3;
-k_value = 20;  
+if ~exist('silent','var')
+    silent = false;
+end
+if ~exist('plotit','var')
+    plotit = 1;
+end
+if ~exist('s','var')
+    s = 5.0;
+end
+if ~exist('dim','var')
+    dim = 3;
+end
+if ~exist('r','var')
+    r = 1.0;
+end
+if ~exist('R','var')
+    R = 4.0;
+end
+if ~exist('cnf','var')
+    cnf = 1;       
+    N = 500;
+end
+k_value = 80;  
 repel_steps = 100;
-F = 3*repel_steps^0.6;
-cycles = 40;
+cycles = 8;
 torus = @(phi, theta,r,R) [ (R+r*cos(theta)).*cos(phi);...
                             (R+r*cos(theta)).*sin(phi);...
                             r*sin(theta)];
@@ -30,16 +50,35 @@ jtorus = @(phi, theta,r,R) [-(R+r*cos(theta)).*sin(phi); ...
                              -r*sin(theta).*cos(phi);...
                              -r*sin(theta).*sin(phi);...
                              r*cos(theta)];
-if cnf==0 || cnf==1
-    s = cnf*s + (1-cnf)*6.0;
-    N = cnf*N + (1-cnf)*10000;
-    r = cnf*r + (1-cnf)*1.0;
-    R = cnf*R + (1-cnf)*3.0;
+if cnf==0 || cnf ==1
     cnf = 2*pi*rand(2,N);
     cnf = torus(cnf(1,:),cnf(2,:),r,R);
 else
     [~, N] = size(cnf);
 end
+
+if isscalar(cnf)
+    if ~exist('silent','var') || ~silent
+        fprintf( '\nStarting with a random point set.')
+    end
+    cnf = 2*pi*rand(2,N);
+    cnf = torus(cnf(1,:),cnf(2,:),r,R);
+else
+    [dim, N] = size(cnf);
+end
+
+switch s
+    case 5.0
+        compute_weights = @(x) 1./x./x./x;
+    case 2.5
+        compute_weights = @(x) 1./x./sqrt(x)./sqrt(sqrt(x));
+    case 0.5
+        compute_weights = @(x) 1./sqrt(x)./sqrt(sqrt(x));
+    otherwise
+        compute_weights = @(x) sqrt(x).^(-s-1);     
+end
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 
 fprintf( '\nWe will be minimizing the %f-Riesz energy of %d points on the',s,N)
 fprintf( '\n3-dimensional torus with radii R=%3.2f and r=%3.2f\n\n', R,r)
@@ -69,19 +108,23 @@ tic
 cnf1=cnf;
 
 for cycle=1:cycles
-    [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-    IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
-    step = min(D(:,2));
-%      tic
-    fprintf( '\nNow in cycle %d.',cycle)
-    for iter=1:repel_steps
+    if s>=dim || cycle<5
+        [IDX, ~] = knnsearch(cnf', cnf', 'k', k_value+1);
+        IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
+    end
+    tic
+%     fprintf( '\nNow in cycle %d.',cycle)
+    for iter=1:repel_steps*cycle
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
-        knn_norms = sqrt(sum(knn_differences.^2,1));
-        riesz_weights = knn_norms.^(-s-1);
-        directions = bsxfun(@times,riesz_weights,knn_differences);
-        directions = reshape(directions, dim, k_value, []);
-        normals = reshape(sum(directions,2), dim, []);
+        knn_norms_squared = sum(knn_differences.^2,1);
+        riesz_weights = compute_weights(knn_norms_squared);
+        
+        gradient = bsxfun(@times,riesz_weights,knn_differences);
+        gradient = reshape(gradient, dim, k_value, []);
+        directions = reshape(sum(gradient,2), dim, []);
+        directions = directions/mean(sqrt(sum(directions.*directions,1)));
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %         
         [tangent_angles1, tangent_angles2] = ...
             torus_inversion(cnf(1,:),cnf(2,:),cnf(3,:),r,R);
         tangent_planes = jtorus(tangent_angles1,tangent_angles2,r,R);
@@ -91,17 +134,20 @@ for cycle=1:cycles
         tangent_planes1 = tangent_planes1./sqrt(sum(tangent_planes1.^2,1));
         tangent_planes2 = tangent_planes2./sqrt(sum(tangent_planes2.^2,1));
 %         
-        tangent_coefficients1 = sum(tangent_planes1 .* normals,1);
-        tangent_coefficients2 = sum(tangent_planes2 .* normals,1);
+        tangent_coefficients1 = sum(tangent_planes1 .* directions,1);
+        tangent_coefficients2 = sum(tangent_planes2 .* directions,1);
         tangents =  bsxfun(@times,tangent_coefficients1,tangent_planes1)...
                   + bsxfun(@times,tangent_coefficients2,tangent_planes2);
-%               
-        tangents = tangents./sqrt(sum(tangents.^2,1));
-        cnf = cnf + tangents * step/F;
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %               
+        step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
+%         tangents = tangents/max(sqrt(sum(tangents.*tangents,1)));
+        cnf = cnf + tangents .* step/iter;
         cnfR =  [R*cnf(1:dim-1,:)./sqrt(sum(cnf(1:dim-1,:).^2,1)); zeros(1,N)];
         cnf = cnfR + r*(cnf-cnfR)./sqrt(sum((cnf-cnfR).^2,1));
     end
-%     toc 
+    if ~exist('silent','var') || ~silent
+        toc
+    end
 end
 mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
 toc
@@ -109,6 +155,7 @@ toc
 % [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 % step = min(D(:,2));
 plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
+axis vis3d
 % plot3( cnf1(1,:), cnf1(2,:), cnf1(3,:),'.r','MarkerSize',7)
 % dlmwrite('cnf.out',cnf','delimiter','\t');
 

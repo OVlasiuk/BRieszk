@@ -27,14 +27,13 @@ if ~exist('cnf','var')
     plotit = 1;
     silent = false;
 end
-if cnf==0 || cnf==1
+if isscalar(cnf)
     if ~exist('silent','var') || ~silent
         fprintf( '\nStarting with a random point set.')
     end
     cnf = randn(dim,N); 
 else
-    dim = size(cnf,1);
-    N = size(cnf,2);
+    [dim, N] = size(cnf);
 end
 switch s
     case 5.0
@@ -52,7 +51,7 @@ if s < dim
     repel_steps = 100;
     repel_cycles = 5;
 else
-    k_value = 6 * dim;
+    k_value = min(6 * dim, N-1);
     repel_steps = 200;
     repel_cycles = 10;
 end
@@ -110,9 +109,10 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     pbaspect([1 1 1]);
     colormap(winter)
     [x,y,z] = sphere(30);
-    mesh(x,y,z)
+    mesh(x,y,z,'EdgeAlpha',.3)
     hold on
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+    axis vis3d
 else
     if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
         pbaspect([1 1 1]);
