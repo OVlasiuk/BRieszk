@@ -54,7 +54,7 @@ if isscalar(cnf)
         fprintf( '\nStarting with a random point set.')
     end
     if ~exist('r','var')
-    r = 1;
+        r = 1;
     end
     if ~exist('R','var')
         R = 1.2;
@@ -76,10 +76,12 @@ if isscalar(cnf)
 else
     [dim, N] = size(cnf);
     if ~exist('r','var')
-    r = min(sqrt(sum(cnf.*cnf,1)));
+        r = min(sqrt(sum(cnf.*cnf,1)));
+        n = 0;
     end
     if ~exist('R','var')
         R = max(sqrt(sum(cnf.*cnf,1)));
+        n = 0;
     end
 end
 switch s

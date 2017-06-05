@@ -84,7 +84,7 @@ else
 end
 [~, holedists] = knnsearch(cnf',V,'k',dim+1);
 fprintf('The deepest hole:\t %3.6f \n',max(holedists(:,1)));
-fprintf('Average hole depth:\t %3.6f \n',max(holedists(:,1)));
+fprintf('Average hole depth:\t %3.6f \n',mean(holedists(:,1)));
 fprintf('.25 hole radius quantile:\t %3.6f \n',quantile(holedists(:,1), .25 ));
 % fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
 %     ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
