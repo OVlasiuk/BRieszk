@@ -53,8 +53,10 @@ fprintf( 'Analyzing a set of cardinality %d in %d-dimensional space.\n', N, dim)
 [~, Dcnf] = knnsearch(cnf', cnf', 'k', adjacency+1);
 Dcnf = Dcnf(:,2:end);     % the first column contains only zeros
 separation_all = min(Dcnf(:,1));
-fprintf( 'The separation distance of this node set:\t%d\n',...
+fprintf( 'The separation distance of this node set:\t%3.6f\n',...
         separation_all);
+fprintf( '.25 separation distance quantile:\t%3.6f\n',...
+    quantile(Dcnf(:,1),.25));
 % % % % % % % % % % SEPARATION OF THE SURFACE NODE SET % % % % % % % % % % 
 if exist('in_domainF', 'var') && isa(in_domainF,'function_handle')
     CNF = repmat(cnf,2*dim,1);
@@ -81,9 +83,12 @@ else
     fprintf('No domain indicator function provided, proceeding anyway...\n');
 end
 [~, holedists] = knnsearch(cnf',V,'k',dim+1);
-fprintf('The largest increase from 1st to %d-th deepest hole is:\t %3.6f\n'...
-    ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
-fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
+fprintf('The deepest hole:\t %3.6f \n',max(holedists(:,1)));
+fprintf('Average hole depth:\t %3.6f \n',max(holedists(:,1)));
+fprintf('.25 hole radius quantile:\t %3.6f \n',quantile(holedists(:,1), .25 ));
+% fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
+%     ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
+% fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -125,10 +130,10 @@ deepest_holes.DisplayStyle='stairs';
 deepest_holes.Normalization = 'probability';
 deepest_holes.EdgeColor = 'black';
 deepest_holes.LineStyle=':';
-deepest_holes.LineWidth=1.5;
+deepest_holes.LineWidth=2.0;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
-ylabel('Number of nodes','FontSize',24);
+ylabel('Probability of the characteristic','FontSize',24);
 xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %

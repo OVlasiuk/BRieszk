@@ -145,6 +145,7 @@ end
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     pbaspect([1 1 1]);
+    daspect([1 1 1]);
     colormap(winter)
     [x,y,z] = sphere(30);
     X=r*x; Y=r*y; Z=r*z;
@@ -153,8 +154,12 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     X=R*x; Y=R*y; Z=R*z;
     colormap(autumn)    
     mesh(X,Y,Z,'EdgeAlpha',.1,'FaceAlpha',.1)
-    plot3(cnf(1,1:N),cnf(2,1:N),cnf(3,1:N),'.k','MarkerSize',msize)
-    plot3(cnf(1,N+1:end),cnf(2,N+1:end),cnf(3,N+1:end),'ob','MarkerSize',.4*msize)
+    p1 = plot3(cnf(1,1:N),cnf(2,1:N),cnf(3,1:N),'.k','MarkerSize',msize);
+    p2 = plot3(cnf(1,N+1:end),cnf(2,N+1:end),cnf(3,N+1:end),'ob','MarkerSize',.4*msize);
+    leg=legend([p1; p2],'2*n initial surface nodes ',...
+    'N interior nodes after redistribution (may be on the surface)');
+    leg.Location = 'south';
+    leg.FontSize = 12;
     axis vis3d
 else
     if dim==2 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
