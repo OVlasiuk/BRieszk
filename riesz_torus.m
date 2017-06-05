@@ -1,4 +1,4 @@
-function cnf = riesz_torus(cnf,N,s,r,R)
+function cnf = riesz_torus(cnf,N,s,r,R,plotit,silent)
 % RIESZ_TORUS
 % cnf = riesz_torus(cnf,N,s,r,R)
 % Returns a configuration obtained from performing the gradient descent on
@@ -16,6 +16,8 @@ function cnf = riesz_torus(cnf,N,s,r,R)
 % s -- exponent in the Riesz energy to be minimized; default value is 6.0;
 % r -- minor radius of the torus;
 % R -- major radius of the torus.
+% plotit -- pass 'y' or 1, etc., to plot the produced configuration.
+% silent -- pass 'y' or 1, etc., to suppress output to console.
 if ~exist('silent','var')
     silent = false;
 end
@@ -24,9 +26,6 @@ if ~exist('plotit','var')
 end
 if ~exist('s','var')
     s = 5.0;
-end
-if ~exist('dim','var')
-    dim = 3;
 end
 if ~exist('r','var')
     r = 1.0;
@@ -79,15 +78,10 @@ switch s
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-
-fprintf( '\nWe will be minimizing the %f-Riesz energy of %d points on the',s,N)
-fprintf( '\n3-dimensional torus with radii R=%3.2f and r=%3.2f\n\n', R,r)
-
-% row indices in the sparse matrix with Jacobians:
-I= repmat(reshape(1:N*dim,dim,[]), dim-1, 1);
-% column indices in the sparse matrix with Jacobians:
-J = repmat(1:(dim-1)*N, dim, 1);
-tangent_coefficients = zeros(dim-1, N);
+if ~exist('silent','var') || ~silent
+    fprintf( '\nWe will be minimizing the %f-Riesz energy of %d points on the',s,N)
+    fprintf( '\n3-dimensional torus with radii R=%3.2f and r=%3.2f\n\n', R,r)
+end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
@@ -105,7 +99,6 @@ hold on
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
 tic
-cnf1=cnf;
 
 for cycle=1:cycles
     if s>=dim || cycle<5
@@ -113,7 +106,6 @@ for cycle=1:cycles
         IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
     end
     tic
-%     fprintf( '\nNow in cycle %d.',cycle)
     for iter=1:repel_steps*cycle
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
@@ -149,14 +141,18 @@ for cycle=1:cycles
         toc
     end
 end
-mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
-toc
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-% [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-% step = min(D(:,2));
-plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
-axis vis3d
-% plot3( cnf1(1,:), cnf1(2,:), cnf1(3,:),'.r','MarkerSize',7)
+% mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
+msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
+if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
+    pbaspect([1 1 1]);
+    daspect([1 1 1]);
+    colormap(winter)
+    [x,y,z] = sphere(30);
+    mesh(x,y,z,'EdgeAlpha',.3)
+    hold on
+    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+    axis vis3d
+end
 % dlmwrite('cnf.out',cnf','delimiter','\t');
 
 

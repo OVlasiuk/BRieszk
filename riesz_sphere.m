@@ -52,7 +52,7 @@ if s < dim
     repel_cycles = 5;
 else
     k_value = min(6 * dim, N-1);
-    repel_steps = 200;
+    repel_steps = 50;
     repel_cycles = 10;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -81,7 +81,7 @@ for cycle=1:repel_cycles
         end
     end
     tic
-    for iter=1:repel_steps
+    for iter=1:repel_steps*cycle
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
         knn_norms = sum(knn_differences.*knn_differences,1);

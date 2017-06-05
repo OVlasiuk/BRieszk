@@ -1,6 +1,6 @@
-function cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,silent)
+function cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,analyzeit,silent)
 %RIESZ_SHELL
-% cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,silent)
+% cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,analyzeit,silent)
 % Returns a configuration obtained from applying the gradient descent to
 % the given (or random) 2*n+N-point collection inside a spherical shell.
 % The inner and outer shell radii are defined by parameters r and R,
@@ -26,9 +26,14 @@ function cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,silent)
 %   be using the Matlab's power function, which turns out to be not that
 %   great.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
+% analyzeit -- pass 'y' or 1, etc., to invoke pt_analyzer for the produced
+% configuration.
 % silent -- pass 'y' or 1, etc., to suppress output to console.
 if ~exist('silent','var')
     silent = false;
+end
+if ~exist('analyzeit','var')
+    analyzeit = 1;
 end
 if ~exist('plotit','var')
     plotit = 1;
@@ -156,6 +161,10 @@ else
         pbaspect([1 1 1]);
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
+end
+if dim==3 && exist('analyzeit','var') && (analyzeit=='y' || analyzeit=='Y' || analyzeit==1)
+    in_d = @(x,y,z) min(max(sqrt(x.*x + y.*y + z.*z), r), R) == sqrt(x.*x + y.*y + z.*z);
+    pt_analyzer(cnf, in_d)
 end
 
 % dlmwrite('cnf.out',cnf','delimiter','\t','precision',10);
