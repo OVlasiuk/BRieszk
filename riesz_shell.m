@@ -105,7 +105,9 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if ~exist('silent','var') || ~silent
     fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points in the',s,size(cnf,2))
-    fprintf( '\n%d-dimensional shell with radii %3.2f and %3.2f.\n\n', dim-1, r, R)
+    fprintf( '\n%d-dimensional shell with radii %3.2f and %3.2f.\n', dim-1, r, R)
+    fprintf( 'This includes %d points on both inner and outer surfaces,\n', n)
+    fprintf( 'and %d points in the interior.\n\n', N)
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
