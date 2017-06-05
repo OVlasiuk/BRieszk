@@ -8,7 +8,8 @@ To see details about a specific function, type **help _name_of_the_function_** i
 DISCLAIMER: if any of these routines performs fast, it is only due to all the calculations being done in a (possibly, very) sloppy manner. The end result is by no means guaranteed to be a minimizer, even a local one. If you're lucky, it may be _somewhat close_ to a minimizer, whatever 'close' could mean here.
 
 ## List of functions:
-* riesz_shell(cnf, n, N, r, R, dim, s, plotit, silent)
+* pt_analyzer(cnf, in_domainF)
+* riesz_shell(cnf, n, N, r, R, dim, s, plotit, analyzeit, silent)
 * riesz_sphere(cnf, N, dim, s, plotit, silent)
 * riesz_torus(cnf, N, s, r, R)
 * torus_inversion(x, y, z, r, R)
