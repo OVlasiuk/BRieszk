@@ -160,8 +160,8 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     mesh(X,Y,Z,'EdgeAlpha',.1,'FaceAlpha',.1)
     p1 = plot3(cnf(1,1:N),cnf(2,1:N),cnf(3,1:N),'.k','MarkerSize',msize);
     p2 = plot3(cnf(1,N+1:end),cnf(2,N+1:end),cnf(3,N+1:end),'ob','MarkerSize',.4*msize);
-    leg=legend([p1; p2],'2*n initial surface nodes ',...
-    'N interior nodes after redistribution (may be on the surface)');
+    leg=legend([p1; p2],'N interior nodes after redistribution (may be on the surface)',...
+    '2*n initial surface nodes ');
     leg.Location = 'south';
     leg.FontSize = 12;
     axis vis3d
