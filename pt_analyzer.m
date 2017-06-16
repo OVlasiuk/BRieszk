@@ -1,4 +1,4 @@
-function pt_analyzer(cnf, in_domainF)
+function deep_holes = pt_analyzer(cnf, in_domainF, figfactor, varargin)
 %PT_ANALYZER
 % pt_analyzer(cnf, in_domainF)
 % Given a (dim)x(number of points)-array, will determine its separation
@@ -9,24 +9,37 @@ function pt_analyzer(cnf, in_domainF)
 % in_domainF is expected as 
 %    in = in_domainF(x, y, z),
 % where 'in' is a logical array of the same size as 'x', and 'x', 'y', 'z'
-% are the respective coordinates 
+% are the respective coordinates.
+% figfactor -- the default figure numbers will shifted by
+% 100*(figfactor-1); must be an integer.
 %    See also KNNSEARCH, VORONOIN.
 
 path_old = pwd;
 path_new = char(mfilename('fullpath'));
 cd(path_new(1:end-11))
 addpath .
+whether_holes = 0;
+for i=1:numel(varargin)-1
+    if (varargin{i} == 'holes') 
+        whether_holes = 1;
+        break
+    end
+end
+    
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 if length(size(cnf)) ~= 2
     fprintf( 'Sorry, can only parse a (dim)x(number of points) array.\n')
     return
 end
 [dim, N] = size(cnf);
+if ~exist('figfactor','var') || (figfactor <= 0)
+    figfactor = 1;
+end
 
 format long;
 % bins = 200;
 % binwidth = .0002;
-adjacency = 4*dim+1;
+adjacency = 13;
     colors = [[138,186,195]
     [86,54,41]
     [169,191,160]
@@ -76,26 +89,40 @@ else
      in_domainF = 1;
 end
 % % % % % % % % % % % % % % % % % % HOLE RADII % % % % % % % % % % % % % %
-[V,~] = voronoin(cnf');
-if isa(in_domainF,'function_handle')
-    V = V(in_domainF(V(:,1),V(:,2),V(:,3)),:);       % Voronoi centers inside the shell
-else
-    fprintf('No domain indicator function provided, proceeding anyway...\n');
+if whether_holes
+    [V,~] = voronoin(cnf');
+    if isa(in_domainF,'function_handle')
+        V = V(in_domainF(V(:,1),V(:,2),V(:,3)),:);       % Voronoi centers inside the shell
+    else
+        fprintf('No domain indicator function provided, proceeding anyway...\n');
+    end
+    [~, holedists] = knnsearch(cnf',V,'k',dim+1);
+    fprintf('Number of holes:\t %d \n',size(holedists,1));
+    deep_inds = density_shell_uni(V')< holedists(:,1)';
+    fprintf('Number of deep holes:\t %d \n',sum( deep_inds ));
+    deep_holes = V(deep_inds,:)
+    fprintf('The deepest hole:\t %3.6f \n',max(holedists(:,1)));
+    fprintf('Average hole depth:\t %3.6f \n',mean(holedists(:,1)));
+    fprintf('.25 hole radius quantile:\t %3.6f \n',quantile(holedists(:,1), .25 ));
+    fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
+        ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
+    fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
 end
-[~, holedists] = knnsearch(cnf',V,'k',dim+1);
-fprintf('The deepest hole:\t %3.6f \n',max(holedists(:,1)));
-fprintf('Average hole depth:\t %3.6f \n',mean(holedists(:,1)));
-fprintf('.25 hole radius quantile:\t %3.6f \n',quantile(holedists(:,1), .25 ));
-% fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
-%     ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
-% fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
-
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % % % % % % % % % % % % % % % % % % PLOTTING % % % % % % % % % % % % % % % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+                                    figure(20 + 100* (figfactor - 1 ));    
+msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
+plot3(cnf(1,:), cnf(2,:), cnf(3,:),  '.b','MarkerSize',msize);
+axis vis3d;
+pbaspect([1 1 1])
+daspect([1 1 1])
+title('The nodes (all)')
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if isa(in_domainF,'function_handle')
-                                figure(30);
+                                figure(30+ 100* (figfactor - 1 ));
     msize = ceil(max(1, 22-3.5*log10(size(cnfsurf,2)) ));
     plot3(cnfsurf(1,:), cnfsurf(2,:), cnfsurf(3,:),  '.b','MarkerSize',msize);
     axis vis3d;
@@ -104,37 +131,68 @@ if isa(in_domainF,'function_handle')
     title('Surface nodes')
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-                                figure(50);
-pbaspect([1 1 1])
-daspect([1 1 1])
-hold on;
-for i=1:adjacency
-    cnf_nearest_neighbors = histogram(Dcnf(:,i));%,bins,'BinWidth',binwidth
-    cnf_nearest_neighbors.EdgeAlpha=0;
-    cnf_nearest_neighbors.FaceAlpha = .4;
-    cnf_nearest_neighbors.Normalization = 'probability';
-    cnf_nearest_neighbors.EdgeColor = colors(i,:);
-    if isa(in_domainF,'function_handle')
-        cnfsurf_nearest_neighbors = histogram(Dsurf(:,i)); %,bins,'BinWidth',binwidth
-        cnfsurf_nearest_neighbors.EdgeAlpha=1;   
-        cnfsurf_nearest_neighbors.FaceAlpha = .1;
-        cnfsurf_nearest_neighbors.Normalization = 'probability';
-        cnfsurf_nearest_neighbors.DisplayStyle = 'stairs';  
-        cnfsurf_nearest_neighbors.EdgeColor = cnf_nearest_neighbors.EdgeColor;
+% Solid color denotes nearest neighbors; contour only denotes surface
+% nearest neighbors.
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+if whether_holes
+                                    figure(40+ 100* (figfactor - 1 ));
+    pbaspect([1 1 1])
+    daspect([1 1 1])
+    hold on;
+    for i=1:adjacency
+        cnf_nearest_neighbors = histogram(Dcnf(:,i));%,bins,'BinWidth',binwidth
+        cnf_nearest_neighbors.EdgeAlpha=0;
+        cnf_nearest_neighbors.FaceAlpha = .4;
+        cnf_nearest_neighbors.Normalization = 'probability';
+        cnf_nearest_neighbors.EdgeColor = colors(i,:);
+        if isa(in_domainF,'function_handle')
+            cnfsurf_nearest_neighbors = histogram(Dsurf(:,i)); %,bins,'BinWidth',binwidth
+            cnfsurf_nearest_neighbors.EdgeAlpha=1;   
+            cnfsurf_nearest_neighbors.FaceAlpha = .1;
+            cnfsurf_nearest_neighbors.Normalization = 'probability';
+            cnfsurf_nearest_neighbors.DisplayStyle = 'stairs';  
+            cnfsurf_nearest_neighbors.EdgeColor = cnf_nearest_neighbors.EdgeColor;
+        end
+    end
+    deepest_holes = histogram(holedists(:,1)); %,bins,'BinWidth',binwidth
+    deepest_holes.EdgeAlpha=1;
+    deepest_holes.DisplayStyle='stairs';
+    deepest_holes.Normalization = 'probability';
+    deepest_holes.EdgeColor = 'black';
+    deepest_holes.LineStyle=':';
+    deepest_holes.LineWidth=2.0;
+    
+%             figure(60+ 100* (figfactor - 1 ));
+% plot3(cnfsurf(1,:), cnfsurf(2,:), cnfsurf(3,:),  'or','MarkerSize',ceil(msize/2));            
+else
+                                    figure(40+ 100* (figfactor - 1 ));
+    pbaspect([1 1 1])
+    daspect([1 1 1])
+    hold on;
+    for i=2:adjacency
+        cnf_nearest_neighbors_ratio = histogram( Dcnf(:,i) ./ Dcnf(:,1) );%,bins,'BinWidth',binwidth
+        cnf_nearest_neighbors_ratio.EdgeAlpha=0;
+        cnf_nearest_neighbors_ratio.FaceAlpha = .4;
+        cnf_nearest_neighbors_ratio.Normalization = 'probability';
+        cnf_nearest_neighbors_ratio.EdgeColor = colors(i,:);
+        if isa(in_domainF,'function_handle')
+            cnfsurf_nearest_neighbors_ratio = histogram( Dsurf(:,i) ./ Dsurf(:,1) ); %,bins,'BinWidth',binwidth
+            cnfsurf_nearest_neighbors_ratio.EdgeAlpha=1;   
+            cnfsurf_nearest_neighbors_ratio.FaceAlpha = .1;
+            cnfsurf_nearest_neighbors_ratio.Normalization = 'probability';
+            cnfsurf_nearest_neighbors_ratio.DisplayStyle = 'stairs';  
+            cnfsurf_nearest_neighbors_ratio.EdgeColor = cnf_nearest_neighbors_ratio.EdgeColor;
+        end
     end
 end
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
-deepest_holes = histogram(holedists(:,1)); %,bins,'BinWidth',binwidth
-deepest_holes.EdgeAlpha=1;
-deepest_holes.DisplayStyle='stairs';
-deepest_holes.Normalization = 'probability';
-deepest_holes.EdgeColor = 'black';
-deepest_holes.LineStyle=':';
-deepest_holes.LineWidth=2.0;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 set(gca,'FontSize',12)
 ylabel('Probability of the characteristic','FontSize',24);
-xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
+if whether_holes
+    xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
+else
+    xlabel('Distances to the nearest neighbors: ratios','FontSize',24);
+end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % BOXPLOT:
@@ -146,33 +204,47 @@ xlabel('Distances to the nearest neighbors vs hole radii','FontSize',24);
 % The whiskers extend to the most extreme data points not considered outliers,
 % and the outliers are plotted individually using the '+' symbol.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-                                figure(60);
-subplot(1,2,1)
-hold on;
-boxplot(Dsurf) % ,'PlotStyle','compact'
-set(gca,'FontSize',12)
-figure(60)
-plot(max(Dsurf,[],1));
-plot(min(Dsurf,[],1));
-leg = legend('Maximal distances for the surface node set','Minimal distances for the surface node set');
-leg.FontSize = 16;
-leg.Location = 'southeast';
-xlim([1 adjacency]);
-ylim([0 max(max(Dsurf))]);
-%
-figure(60)
-subplot(1,2,2)
-boxplot(Dcnf)
-hold on
-plot(max(Dcnf,[],1));
-plot(min(Dcnf,[],1));
-leg = legend('Maximal distances for the whole node set','Minimal distances for the whole node set');
-leg.FontSize = 16;
-leg.Location = 'southeast';
-xlim([1 adjacency]);
-ylim([0 max(max(Dsurf))]);
-figure(60)
-set(gca,'FontSize',12)
+                                figure(50+ 100* (figfactor - 1 ));
+if isa(in_domainF,'function_handle')
+    Ry = max(max(max(Dsurf)), max(max(Dsurf)));
+    subplot(1,2,1)
+    hold on;
+    boxplot(Dsurf) % ,'PlotStyle','compact'
+    set(gca,'FontSize',12)
+    figure(50 + 100* (figfactor - 1 ))
+    plot(max(Dsurf,[],1));
+    plot(min(Dsurf,[],1));
+    leg = legend('Maximal distances for the surface node set','Minimal distances for the surface node set');
+    leg.FontSize = 16;
+    leg.Location = 'southeast';
+    xlim([1 adjacency]);
+    ylim([0 Ry]);
+    %
+    figure(50 + 100* (figfactor - 1 ))
+    subplot(1,2,2)
+    set(gca,'FontSize',12)
+    boxplot(Dcnf)
+    hold on
+    plot(max(Dcnf,[],1));
+    plot(min(Dcnf,[],1));
+    leg = legend('Maximal distances for the whole node set','Minimal distances for the whole node set');
+    leg.FontSize = 16;
+    leg.Location = 'southeast';
+    xlim([1 adjacency]);
+    ylim([0 Ry]);
+    figure(50 + 100* (figfactor - 1 ))
+else
+    hold on;
+    set(gca,'FontSize',12)
+    boxplot(Dcnf)
+    plot(max(Dcnf,[],1));
+    plot(min(Dcnf,[],1));
+    leg = legend('Maximal distances for the whole node set','Minimal distances for the whole node set');
+    leg.FontSize = 16;
+    leg.Location = 'southeast';
+    xlim([1 adjacency]);
+    ylim([0 max(max(Dcnf))]);
+end
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %

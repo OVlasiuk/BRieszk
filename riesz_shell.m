@@ -33,7 +33,7 @@ if ~exist('silent','var')
     silent = false;
 end
 if ~exist('analyzeit','var')
-    analyzeit = 1;
+    analyzeit = 0;
 end
 if ~exist('plotit','var')
     plotit = 1;
@@ -135,7 +135,7 @@ for cycle=1:repel_cycles
         
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
         
-        cnf(:,1:N) = cnf(:,1:N) + directions .* sqrt(step)/iter;
+        cnf(:,1:N) = cnf(:,1:N) + directions .* step/iter;
         rads = sqrt(sum(cnf(:,1:N).*cnf(:,1:N),1));
         cnf(:,1:N) = cnf(:,1:N) ./ rads .* min(max(rads, r), R);
     end

@@ -35,6 +35,9 @@ if isscalar(cnf)
 else
     [dim, N] = size(cnf);
 end
+if ~exist('s','var')
+    s = 5.0;
+end 
 switch s
     case 5.0
         compute_weights = @(x) 1./x./x./x;
@@ -94,7 +97,7 @@ for cycle=1:repel_cycles
         % computing scalar products only works because we are on the unit
         % sphere
         tangents = tangents/max(sqrt(sum(tangents.^2,1)));
-        cnf = cnf + tangents * step/3/cycle;%/iter
+        cnf = cnf + tangents * step/(3+cycle);%/iter
         cnf = cnf./sqrt(sum(cnf.*cnf,1));
     end
     if ~exist('silent','var') || ~silent
