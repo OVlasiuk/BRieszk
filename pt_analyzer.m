@@ -1,4 +1,4 @@
-function deep_holes = pt_analyzer(cnf, in_domainF, figfactor, varargin)
+function pt_analyzer(cnf, in_domainF, densityF, figfactor, varargin)
 %PT_ANALYZER
 % pt_analyzer(cnf, in_domainF)
 % Given a (dim)x(number of points)-array, will determine its separation
@@ -96,17 +96,14 @@ if whether_holes
     else
         fprintf('No domain indicator function provided, proceeding anyway...\n');
     end
-    [~, holedists] = knnsearch(cnf',V,'k',dim+1);
-    fprintf('Number of holes:\t %d \n',size(holedists,1));
-    deep_inds = density_shell_uni(V')< holedists(:,1)';
-    fprintf('Number of deep holes:\t %d \n',sum( deep_inds ));
-    deep_holes = V(deep_inds,:)
+    [~, holedists] = knnsearch(cnf',V);
+    fprintf('Number of holes:\t %d \n',size(holedists,1));    
     fprintf('The deepest hole:\t %3.6f \n',max(holedists(:,1)));
     fprintf('Average hole depth:\t %3.6f \n',mean(holedists(:,1)));
     fprintf('.25 hole radius quantile:\t %3.6f \n',quantile(holedists(:,1), .25 ));
-    fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
-        ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
-    fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
+%     fprintf('The largest increase from 1st to %d-th hole radius is:\t %3.6f\n'...
+%         ,dim+1, max(abs(holedists(:,1)-holedists(:,dim+1))) );
+%     fprintf('(should be zero up to roundoff error, if a domain function is used)\n');
 end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -164,12 +161,16 @@ if whether_holes
     
 %             figure(60+ 100* (figfactor - 1 ));
 % plot3(cnfsurf(1,:), cnfsurf(2,:), cnfsurf(3,:),  'or','MarkerSize',ceil(msize/2));            
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % RATIOS OF NNS % % % % % % % % % % % % % % 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 else
                                     figure(40+ 100* (figfactor - 1 ));
     pbaspect([1 1 1])
     daspect([1 1 1])
     hold on;
     for i=2:adjacency
+        fprintf('Mean ratio of %d-th neighbor to 1st:\t%3.6f\n',i,mean(Dcnf(:,i) ./ Dcnf(:,1)));
         cnf_nearest_neighbors_ratio = histogram( Dcnf(:,i) ./ Dcnf(:,1) );%,bins,'BinWidth',binwidth
         cnf_nearest_neighbors_ratio.EdgeAlpha=0;
         cnf_nearest_neighbors_ratio.FaceAlpha = .4;
