@@ -116,6 +116,10 @@ axis vis3d;
 pbaspect([1 1 1])
 daspect([1 1 1])
 title('The nodes (all)')
+if ~usejava('desktop')
+    g = gcf;
+    print(['fig', num2str(g.Number)],'-dpdf','-r300','-bestfit')
+end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if isa(in_domainF,'function_handle')
@@ -126,6 +130,10 @@ if isa(in_domainF,'function_handle')
     pbaspect([1 1 1])
     daspect([1 1 1])
     title('Surface nodes')
+end
+if ~usejava('desktop')
+    g = gcf;
+    print(['fig', num2str(g.Number)],'-dpdf','-r300','-bestfit')
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % Solid color denotes nearest neighbors; contour only denotes surface
@@ -158,7 +166,10 @@ if whether_holes
     deepest_holes.EdgeColor = 'black';
     deepest_holes.LineStyle=':';
     deepest_holes.LineWidth=2.0;
-    
+    if ~usejava('desktop')
+        g = gcf;
+        print(['fig', num2str(g.Number)],'-dpdf','-r300','-bestfit')
+    end
 %             figure(60+ 100* (figfactor - 1 ));
 % plot3(cnfsurf(1,:), cnfsurf(2,:), cnfsurf(3,:),  'or','MarkerSize',ceil(msize/2));            
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
@@ -184,6 +195,10 @@ else
             cnfsurf_nearest_neighbors_ratio.DisplayStyle = 'stairs';  
             cnfsurf_nearest_neighbors_ratio.EdgeColor = cnf_nearest_neighbors_ratio.EdgeColor;
         end
+    end
+    if ~usejava('desktop')
+        g = gcf;
+        print(['fig', num2str(g.Number)],'-dpdf','-r300','-bestfit')
     end
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -246,7 +261,10 @@ else
     xlim([1 adjacency]);
     ylim([0 max(max(Dcnf))]);
 end
-
+if ~usejava('desktop')
+    g = gcf;
+    print(['fig', num2str(g.Number)],'-dpdf','-r300','-bestfit')
+end
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 cd(path_old)

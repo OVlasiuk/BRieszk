@@ -1,4 +1,4 @@
-function cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
+function [cnf, en] = riesz_sphere(cnf,N,dim,s,plotit,silent)
 %RIESZ_SPHERE
 % cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 % Returns a configuration obtained from applying the gradient descent to
@@ -20,6 +20,7 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 %   Matlab's power function, which turns out to be not that great.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
 % silent -- pass 'y' or 1, etc., to suppress output to console.
+offset = 10;
 if ~exist('cnf','var')
     cnf = 1;
     N = 1000;
@@ -96,9 +97,10 @@ for cycle=1:repel_cycles
         tangents = gradient-bsxfun(@times,sum(cnf.*gradient,1),cnf); 
         % computing scalar products like so only works because we are on 
         % the unit sphere
-        tangents = tangents/max(sqrt(sum(tangents.^2,1)));
+        tangents = tangents./(sqrt(sum(tangents.^2,1)));
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
-        cnf = cnf + tangents .* step/(3+iter);
+%         alpha = min(1, step./sqrt(sum(tangents.*tangents,1)));
+        cnf = cnf + tangents .* step/(offset+iter);
         cnf = cnf./sqrt(sum(cnf.*cnf,1));
     end
     if ~exist('silent','var') || ~silent
@@ -123,17 +125,20 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
+if ~usejava('desktop')
+    print(mfilename,'-dpdf','-r300','-bestfit')
+end
 
-fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-inp = input('','s');
-if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
+% fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
+% inp = input('','s');
+% if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
     en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
                 (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
                 (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
     en = compute_riesz(en);
     en = sum(sum(en(isfinite(en))));
-    fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
-end
+%     fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
+% end
 
 
 % dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)

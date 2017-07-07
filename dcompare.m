@@ -1,11 +1,16 @@
-function ratio = dcompare(pts,densityF, plotit)
+function ratios = dcompare(pts,densityF, plotit)
 %DCOMPARE
-% function dcompare(pts,densityF)
-% Display statistics about how the radial density (aka distance to the nearest neighbor)
-% compares with the values of function densityF at the points 'pts'. Must be vectors in 3-d space.
-%
+% ratio = dcompare(pts,densityF, plotit)
+% Display statistics about how the radial density (aka distance to the
+% nearest neighbor) compares with the values of function 'densityF' at the
+% array of column vectors 'pts'; must be of size (dim)x(N).
+% ratios -- array of values (densityF(pts) ./ D), where D are the distances
+%   to nearest neighbors for columns of 'pts'.
+% Input:
 % pts -- 3x(numpts) array
-% densityF -- function handle
+% densityF -- function handle; must accepts 'pts' as argument.
+% plotit -- pass 'y' or 1, etc., to plot the configuration 'pts'.
+%   See also PT_ANALYZER
 if size(pts,1) ~= 3
     pts = pts';
 end
@@ -13,17 +18,20 @@ end
 [~, D] = knnsearch(pts', pts', 'k', 2);
 rdens_cnf = D(:,2);
 rdens_fun = densityF(pts);
-ratio = rdens_fun./rdens_cnf';
+ratios = rdens_fun./rdens_cnf';
 diff = abs(rdens_fun - rdens_cnf');
 radii = sqrt( sum( pts .*pts,1 ) );
 maxdiff = max(diff);
 meandiff = mean(diff);
-minratio = min(ratio);
-maxratio = max(ratio);
-quantile5 = quantile(ratio,0.05);
-quantile95 = quantile(ratio,0.95);
-meanratio = mean(ratio);
-varratio = var(ratio);
+minratio = min(ratios);
+maxratio = max(ratios);
+quantile5 = quantile(ratios,0.05);
+quantile95 = quantile(ratios,0.95);
+meanratio = mean(ratios);
+varratio = var(ratios);
+fprintf('\t\t= DCOMPARE =\n');
+fprintf('"diff" = abs(rho-D) \n');
+fprintf('"ratio" = rho/D \n');
 fprintf('\nmaxdiff\t\tmeandiff\n');
 fprintf('%3.6f\t%3.6f\n\n',maxdiff,meandiff)
 fprintf('minratio\tmaxratio\tquantile5\tquantile95\n');
@@ -34,19 +42,25 @@ fprintf('%3.6f\t%3.6f\n',meanratio,varratio)
 if exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     msize = ceil(max(1, 22-5*log10(size(pts,2)) ));
     figure(3);
-    plot(radii,ratio,'.k', 'MarkerSize',4)
+    plot(radii,ratios,'.k', 'MarkerSize',4)
     hold on;
     plot(radii,diff,'.g', 'MarkerSize',4)
     set(gca,'FontSize',12)
     xlabel('Radius {\bf\it{N}}','FontSize',24);
     ylabel('\rho({\bf\it{N}})/\Delta({\bf\it{N}})','FontSize',24);
-    
-    
-    figure(4)   
-    plot3(pts(1,ratio>quantile95),pts(2,ratio>quantile95),pts(3,ratio>quantile95),'.k','MarkerSize',msize)
-    hold on;
-    plot3(pts(1,ratio<quantile5),pts(2,ratio<quantile5),pts(3,ratio<quantile5),'.r','MarkerSize',msize)
-    axis vis3d;
-    daspect([1 1 1]);
-    pbaspect([1 1 1]);
+    if ~usejava('desktop')
+        print('ratio','-dpdf','-r300','-bestfit')
+    end
+    if (size(pts,1)==3) 
+        figure(4)   
+        plot3(pts(1,ratios>quantile95),pts(2,ratios>quantile95),pts(3,ratios>quantile95),'.k','MarkerSize',msize)
+        hold on;
+        plot3(pts(1,ratios<quantile5),pts(2,ratios<quantile5),pts(3,ratios<quantile5),'.r','MarkerSize',msize)
+        axis vis3d;
+        daspect([1 1 1]);
+        pbaspect([1 1 1]);
+        if ~usejava('desktop')
+            print('error_location','-dpdf','-r300','-bestfit')
+        end
+    end
 end

@@ -153,6 +153,9 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
     axis vis3d
 end
+if ~usejava('desktop')
+    print(mfilename,'-dpdf','-r300','-bestfit')
+end
 % dlmwrite('cnf.out',cnf','delimiter','\t');
 
 

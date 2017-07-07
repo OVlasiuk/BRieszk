@@ -171,6 +171,9 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
+if ~usejava('desktop')
+    print(mfilename,'-dpdf','-r300','-bestfit')
+end
 if dim==3 && exist('analyzeit','var') && (analyzeit=='y' || analyzeit=='Y' || analyzeit==1)
     in_d = @(x,y,z) min(max(sqrt(x.*x + y.*y + z.*z), r), R) == sqrt(x.*x + y.*y + z.*z);
     pt_analyzer(cnf, in_d)
