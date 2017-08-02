@@ -40,6 +40,7 @@ end
 k_value = 80;  
 repel_steps = 100;
 cycles = 8;
+offset = 18;
 torus = @(phi, theta,r,R) [ (R+r*cos(theta)).*cos(phi);...
                             (R+r*cos(theta)).*sin(phi);...
                             r*sin(theta)];
@@ -92,7 +93,7 @@ syms phi theta;
 x = (R+r*cos(theta))*cos(phi);
 y = (R+r*cos(theta))*sin(phi);
 z = r*sin(theta);
-h=fsurf(x, y, z, [0 2*pi 0 2*pi]);
+h=fsurf(x, y, z, [0 2*pi 0 2*pi], 'FaceAlpha',.7);
 h.EdgeColor = 'none';
 brighten(.9)
 hold on
@@ -133,7 +134,7 @@ for cycle=1:cycles
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %               
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
 %         tangents = tangents/max(sqrt(sum(tangents.*tangents,1)));
-        cnf = cnf + tangents .* step/iter;
+        cnf = cnf + tangents .* step/(offset+iter);
         cnfR =  [R*cnf(1:dim-1,:)./sqrt(sum(cnf(1:dim-1,:).^2,1)); zeros(1,N)];
         cnf = cnfR + r*(cnf-cnfR)./sqrt(sum((cnf-cnfR).^2,1));
     end
@@ -144,12 +145,8 @@ end
 % mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    pbaspect([1 1 1]);
-    daspect([1 1 1]);
-    colormap(winter)
-    [x,y,z] = sphere(30);
-    mesh(x,y,z,'EdgeAlpha',.3)
-    hold on
+    daspect([1 1 1])
+    pbaspect([1 1 1])
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
     axis vis3d
 end

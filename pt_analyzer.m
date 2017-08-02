@@ -1,17 +1,19 @@
-function pt_analyzer(cnf, in_domainF, densityF, figfactor, varargin)
+function pt_analyzer(cnf, in_domainF, figfactor, varargin)
 %PT_ANALYZER
-% pt_analyzer(cnf, in_domainF)
+% pt_analyzer(cnf, in_domainF, densityF, figfactor, varargin)
 % Given a (dim)x(number of points)-array, will determine its separation
 % distance, distribution of distances to the nearest neighbors, and radii
 % of the largest holes. Provided an indicator function of the restricting
 % domain, in_domainF, will detect a subset of nodes, that are at most
 % (separation_distance/2) away from the boundary in l1-metric. 
-% in_domainF is expected as 
-%    in = in_domainF(x, y, z),
-% where 'in' is a logical array of the same size as 'x', and 'x', 'y', 'z'
-% are the respective coordinates.
-% figfactor -- the default figure numbers will shifted by
-% 100*(figfactor-1); must be an integer.
+% 
+% in_domainF is expected as 'in = in_domainF(x, y, z)',
+%   where 'in' is a logical array of the same size as 'x', and 'x', 'y', 'z'
+%   are the respective coordinates.
+% figfactor -- the default figure numbers will be shifted by
+%   100*(figfactor-1); must be an integer.
+% Pass the string 'holes' as the last argument to perform hole analysis.
+% 
 %    See also KNNSEARCH, VORONOIN.
 
 path_old = pwd;
