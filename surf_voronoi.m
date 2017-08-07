@@ -4,26 +4,17 @@ function surf_voronoi(cnf, surfF, gradF)
 % cnf -- 3x(num_pts), the node set to be processed
 % surfF -- the surface is defined by surfF(x,y,z) == 0;
 % gradF -- a function handle to evaluate the gradient to the surface at
-%   point (x,y,z);
-
-
-% cnf = randn(3,4000);
-% cnf = cnf./sqrt(sum(cnf.*cnf,1));
-% surfF = @(x,y,z) x^2 + y^2 + z^2 -1;
-% gradF = @(x,y,z) [2*x; 2*y; 2*z];
+%   a point (x,y,z);
 
 k_value = 100;
 N = size(cnf,2);
 
 [IDX, ~] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX';
-% IDX = IDX(:,2:end)'; 
 
 faces = zeros(10 * k_value * N, 3);         % not a real estimate, of course; 
                                             % a bad upper bound is 
                                             % n choose 3
-% vorvertAdjacency = zeros(3* k_value * N, 3);
-
 C_Tri = round(rand(k_value * N, 1)*3);
 f_ind = 0;
 for i=1:N
@@ -39,31 +30,26 @@ end
 faces = faces(logical(faces(:,1)),:);
 faces = sort(faces,2);
 faces = unique(faces,'rows');
-% K = convhull(cnf(1,:)', cnf(2,:)', cnf(3,:)');
-% K = sort(K,2);
-% size(setdiff(faces,K,'rows'),1)
-
 
 C_Tri = C_Tri(logical(faces(:,1)),:);
 T = triangulation(faces, cnf(1,:)', cnf(2,:)', cnf(3,:)');
-% TK = triangulation(K, cnf(1,:)', cnf(2,:)', cnf(3,:)');
-
-figure
-TS = trisurf(T);
-% TS = trimesh(T);
-% set(gca,'CLim',[min(C_Tri), max(C_Tri)]);
+% % Plot the triangulation
+% figure
+% TS = trisurf(T);
+% % TS = trimesh(T);
+% % set(gca,'CLim',[min(C_Tri), max(C_Tri)]);
+% % set(TS,'FaceColor','flat',...
+% %        'FaceVertexCData',C_Tri,...
+% %        'CDataMapping','scaled',...
+% %        'FaceAlpha', .2,...
+% %        'EdgeAlpha',1);
 % set(TS,'FaceColor','flat',...
-%        'FaceVertexCData',C_Tri,...
-%        'CDataMapping','scaled',...
-%        'FaceAlpha', .2,...
+%        'FaceAlpha', 1,...
 %        'EdgeAlpha',1);
-set(TS,'FaceColor','flat',...
-       'FaceAlpha', 1,...
-       'EdgeAlpha',1);
-pbaspect([1 1 1])
-daspect([1 1 1])
-set(gca, 'Clipping', 'off')
-axis vis3d
+% pbaspect([1 1 1])
+% daspect([1 1 1])
+% set(gca, 'Clipping', 'off')
+% axis vis3d
 
 % FaceVertexAlphaData!
  
@@ -95,21 +81,25 @@ end
 
     
 TVor = triangulation(vorDiagramFaces, vorDiagramVerts(:,1), vorDiagramVerts(:,2), vorDiagramVerts(:,3));
-figure
+f = figure
 TSVor = trisurf(TVor);
 set(gca,'CLim',[min(C_TriVor), max(C_TriVor)]);
 set(TSVor,'FaceColor','flat',...
        'FaceVertexCData',C_TriVor,...
        'CDataMapping','scaled',...
        'EdgeAlpha',0);
-% hold on;
-
-% TMesh = trimesh(TVor);
-% set(TMesh, 'EdgeColor','k','FaceAlpha',0);
 pbaspect([1 1 1])
 daspect([1 1 1])
 set(gca, 'Clipping', 'off')
 axis vis3d
+camzoom(1.2)
+f.PaperType = 'a3';
+print(f, 'voronoi','-djpeg','-r600')
+
+% hold on;
+
+% TMesh = trimesh(TVor);
+% set(TMesh, 'EdgeColor','k','FaceAlpha',0);
 
 % 
 % % f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) + x(3).^2 .*(x(3).^2 - 5) + 11;
