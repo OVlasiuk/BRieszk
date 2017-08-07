@@ -8,7 +8,7 @@ function cnf = riesz_torus(cnf,N,s,r,R,plotit,silent)
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points)
 %   here; 
 %  a) call without input arguments to use all the default settings 
-%   (cnf, 10000, 6, 1, 3), cnf random as below;
+%   (cnf, 500, 6, 1, 3), cnf random as below;
 %  b) pass ONE to draw from the uniform distribution IN ANGULAR measure 
 %   (d\phi \times d\psi) using your values of N,s,r,R;
 % N -- number of points in the random configuration to be generated
@@ -31,7 +31,7 @@ if ~exist('r','var')
     r = 1.0;
 end
 if ~exist('R','var')
-    R = 4.0;
+    R = 3.0;
 end
 if ~exist('cnf','var')
     cnf = 1;       
@@ -68,14 +68,14 @@ else
 end
 
 switch s
-    case 5.0
-        compute_weights = @(x) 1./x./x./x;
-    case 2.5
-        compute_weights = @(x) 1./x./sqrt(x)./sqrt(sqrt(x));
+    case 4.0
+        compute_weights = @(x) 1./x./x;
+    case 2.0
+        compute_weights = @(x) 1./x;
     case 0.5
-        compute_weights = @(x) 1./sqrt(x)./sqrt(sqrt(x));
+        compute_weights = @(x) 1./sqrt(sqrt(x));
     otherwise
-        compute_weights = @(x) sqrt(x).^(-s-1);     
+        compute_weights = @(x) sqrt(x).^(-s);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
@@ -93,7 +93,7 @@ syms phi theta;
 x = (R+r*cos(theta))*cos(phi);
 y = (R+r*cos(theta))*sin(phi);
 z = r*sin(theta);
-h=fsurf(x, y, z, [0 2*pi 0 2*pi], 'FaceAlpha',.7);
+h=fsurf(x, y, z, [0 2*pi 0 2*pi], 'FaceAlpha',.9);
 h.EdgeColor = 'none';
 brighten(.9)
 hold on
@@ -145,9 +145,10 @@ end
 % mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    daspect([1 1 1])
-    pbaspect([1 1 1])
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+    pbaspect([1 1 1])
+    daspect([1 1 1])
+    set(gca, 'Clipping', 'off')
     axis vis3d
 end
 if ~usejava('desktop')

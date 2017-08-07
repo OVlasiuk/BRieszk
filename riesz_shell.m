@@ -148,8 +148,6 @@ end
 % step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    pbaspect([1 1 1]);
-    daspect([1 1 1]);
     colormap(winter)
     [x,y,z] = sphere(30);
     X=r*x; Y=r*y; Z=r*z;
@@ -164,6 +162,9 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     '2*n initial surface nodes ');
     leg.Location = 'south';
     leg.FontSize = 12;
+    pbaspect([1 1 1])
+    daspect([1 1 1])
+    set(gca, 'Clipping', 'off')
     axis vis3d
 else
     if dim==2 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
