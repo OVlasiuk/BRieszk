@@ -127,7 +127,7 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
-if ~usejava('desktop') && (plotit=='y' || plotit=='Y' || plotit==1)
+if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
 

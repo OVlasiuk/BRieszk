@@ -142,7 +142,6 @@ for cycle=1:cycles
         toc
     end
 end
-% mean_shift = mean(sqrt(sum((cnf-cnf1).^2,1)))
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
@@ -151,9 +150,11 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     set(gca, 'Clipping', 'off')
     axis vis3d
 end
-if ~usejava('desktop')
+if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
+
+
 % dlmwrite('cnf.out',cnf','delimiter','\t');
 
 
