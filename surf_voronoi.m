@@ -1,4 +1,4 @@
-function surf_voronoi(cnf, surfF, gradF)
+function [vorFig, triFig] = surf_voronoi(cnf, surfF, gradF)
 %SURF_VORONOI
 % Approximate Voronoi diagram on the level surface.
 % cnf -- 3x(num_pts), the node set to be processed
@@ -6,16 +6,18 @@ function surf_voronoi(cnf, surfF, gradF)
 % gradF -- a function handle to evaluate the gradient to the surface at
 %   a point (x,y,z);
 
-k_value = 100;
+% gradF = @(x,y,z) [2*x; 2*y; 2*z];
+
+k_value = 40;
 N = size(cnf,2);
+msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
 [IDX, ~] = knnsearch(cnf', cnf', 'k', k_value+1);
 IDX = IDX';
 
 faces = zeros(10 * k_value * N, 3);         % not a real estimate, of course; 
                                             % a bad upper bound is 
-                                            % n choose 3
-C_Tri = round(rand(k_value * N, 1)*3);
+                                            % n choose 3                         
 f_ind = 0;
 for i=1:N
     nu = null( gradF(cnf(1,i), cnf(2,i), cnf(3,i) )');
@@ -31,31 +33,33 @@ faces = faces(logical(faces(:,1)),:);
 faces = sort(faces,2);
 faces = unique(faces,'rows');
 
-C_Tri = C_Tri(logical(faces(:,1)),:);
+
 T = triangulation(faces, cnf(1,:)', cnf(2,:)', cnf(3,:)');
+C_Tri = round(rand(size(faces,1), 1) * 4);
 % % Plot the triangulation
-% figure
-% TS = trisurf(T);
-% % TS = trimesh(T);
-% % set(gca,'CLim',[min(C_Tri), max(C_Tri)]);
-% % set(TS,'FaceColor','flat',...
-% %        'FaceVertexCData',C_Tri,...
-% %        'CDataMapping','scaled',...
-% %        'FaceAlpha', .2,...
-% %        'EdgeAlpha',1);
+triFig = figure;
+set(triFig, 'Visible', 'off');
+TS = trisurf(T);
+set(gca,'CLim',[min(C_Tri), max(C_Tri)]);
+set(TS,'FaceColor','flat',...
+       'FaceVertexCData',C_Tri,...
+       'CDataMapping','scaled',...
+       'FaceAlpha', 1,...
+       'EdgeAlpha',1);
 % set(TS,'FaceColor','flat',...
 %        'FaceAlpha', 1,...
 %        'EdgeAlpha',1);
-% pbaspect([1 1 1])
-% daspect([1 1 1])
-% set(gca, 'Clipping', 'off')
-% axis vis3d
+pbaspect([1 1 1])
+daspect([1 1 1])
+set(gca, 'Clipping', 'off')
+axis vis3d
 
 % FaceVertexAlphaData!
  
 voronois = T.circumcenter;         % long thin
 vorDiagramVerts = [cnf'; voronois];
 vorDiagramFaces = zeros(3*size(faces,1), 3);
+vorDiagramEdges = zeros(3*size(faces,1), 2);
 C_TriVor = zeros(3*size(faces,1),1);
 fill_i = 0;
 for i=1:N
@@ -66,40 +70,45 @@ for i=1:N
     adjVertsCoords = cnf(:, adjVerts') - cnf(:, i);
     adjVertsCoordsProjected = nu \ adjVertsCoords;
     faceGroupedVerts = reshape(adjVertsCoordsProjected, 2, [], size(adjVerts,1));
-    faceCentroids = squeeze(sum(faceGroupedVerts, 2));
-    [~, sortInd] = sort( atan2(faceCentroids(1,:), faceCentroids(2,:)) );
+    faceCentroids = sum(faceGroupedVerts, 2);
+    [~, sortInd] = sort( atan2(faceCentroids(1,1,:), faceCentroids(2,1,:)) );
     adjFaces = adjFaces(sortInd);
 %     
     vorDiagramFaces( fill_i+1:fill_i+numel(adjFaces), :) =...
         [N+adjFaces; circshift(N+adjFaces,-1); i*ones(size(adjFaces))]';
+    vorDiagramEdges( fill_i+1:fill_i+numel(adjFaces), :) =...
+        [N+adjFaces; circshift(N+adjFaces,-1); ]';
     C_TriVor( fill_i+1:fill_i+numel(adjFaces) ) =...
         numel(adjFaces) * ones(numel(adjFaces),1);
     fill_i = fill_i + numel(adjFaces);
 end
-% vorEdges = zeros(fill_i/2, 2);
-
-
     
 TVor = triangulation(vorDiagramFaces, vorDiagramVerts(:,1), vorDiagramVerts(:,2), vorDiagramVerts(:,3));
-f = figure
+vorFig = figure;
+set(vorFig, 'Visible', 'off');
 TSVor = trisurf(TVor);
-set(gca,'CLim',[min(C_TriVor), max(C_TriVor)]);
+set(gca,'CLim',[4, 7.5]);
 set(TSVor,'FaceColor','flat',...
        'FaceVertexCData',C_TriVor,...
        'CDataMapping','scaled',...
        'EdgeAlpha',0);
+hold on;
+TEdges = trisurf(vorDiagramEdges(:,[1 1 2]),vorDiagramVerts(:,1), vorDiagramVerts(:,2), vorDiagramVerts(:,3));
+% set(TEdges,'EdgeAlpha',.3 ...
+%        );
+plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+
 pbaspect([1 1 1])
 daspect([1 1 1])
+view(3)
+% campos([-45.6343  -59.4699   43.2793])
 set(gca, 'Clipping', 'off')
+set(gca,'xtick','')
+set(gca,'ytick','')
+set(gca,'ztick','')
+axis off
 axis vis3d
-camzoom(1.2)
-f.PaperType = 'a3';
-print(f, 'voronoi','-djpeg','-r600')
-
-% hold on;
-
-% TMesh = trimesh(TVor);
-% set(TMesh, 'EdgeColor','k','FaceAlpha',0);
+% camzoom(1.9);
 
 % 
 % % f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) + x(3).^2 .*(x(3).^2 - 5) + 11;
@@ -124,3 +133,9 @@ print(f, 'voronoi','-djpeg','-r600')
 % % fs = fimplicit3(f)
 % % axis vis3d
 
+% for i=10:10:3650
+% cnf = dlmread([int2str(i) 'it.txt'])';
+% f = surf_voronoi(cnf,g,grad);
+% print(f, [int2str(i) 'it'],'-djpeg','-r800')
+% close
+% end

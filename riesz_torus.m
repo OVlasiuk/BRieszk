@@ -25,7 +25,7 @@ if ~exist('plotit','var')
     plotit = 1;
 end
 if ~exist('s','var')
-    s = 5.0;
+    s = 4.0;
 end
 if ~exist('r','var')
     r = 1.0;
@@ -50,7 +50,7 @@ jtorus = @(phi, theta,r,R) [-(R+r*cos(theta)).*sin(phi); ...
                              -r*sin(theta).*cos(phi);...
                              -r*sin(theta).*sin(phi);...
                              r*cos(theta)];
-if cnf==0 || cnf ==1
+if ~ismatrix(cnf) && (cnf==0 || cnf ==1)
     cnf = 2*pi*rand(2,N);
     cnf = torus(cnf(1,:),cnf(2,:),r,R);
 else
@@ -110,8 +110,8 @@ for cycle=1:cycles
     for iter=1:repel_steps*cycle
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
-        knn_norms_squared = sum(knn_differences.^2,1);
-        riesz_weights = compute_weights(knn_norms_squared);
+        knn_norms_squared = sum(knn_differences.*knn_differences,1);
+        riesz_weights = s*compute_weights(knn_norms_squared)./knn_norms_squared;
         
         gradient = bsxfun(@times,riesz_weights,knn_differences);
         gradient = reshape(gradient, dim, k_value, []);

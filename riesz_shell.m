@@ -29,6 +29,7 @@ function cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,analyzeit,silent)
 % analyzeit -- pass 'y' or 1, etc., to invoke pt_analyzer for the produced
 % configuration.
 % silent -- pass 'y' or 1, etc., to suppress output to console.
+offset = 15;
 if ~exist('silent','var')
     silent = false;
 end
@@ -39,7 +40,7 @@ if ~exist('plotit','var')
     plotit = 1;
 end
 if ~exist('s','var')
-    s = 5.0;
+    s = 4.0;
 end
 if ~exist('dim','var')
     dim = 3;
@@ -85,14 +86,14 @@ else
     end
 end
 switch s
-    case 5.0
-        compute_weights = @(x) 1./x./x./x;
-    case 2.5
-        compute_weights = @(x) 1./x./sqrt(x)./sqrt(sqrt(x));
+    case 4.0
+        compute_riesz = @(x) 1./x./x;
+    case 2.0
+        compute_riesz = @(x) 1./x;
     case 0.5
-        compute_weights = @(x) 1./sqrt(x)./sqrt(sqrt(x));
+        compute_riesz = @(x) 1./sqrt(sqrt(x));
     otherwise
-        compute_weights = @(x) sqrt(x).^(-s-1);     
+        compute_riesz = @(x) sqrt(x).^(-s);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if s < dim
@@ -123,19 +124,18 @@ for cycle=1:repel_cycles
     end
     tic
     for iter=1:cycle*repel_steps
-%       unitary = cnf./sqrt(sum(cnf.*cnf,1));
         cnf_repeated = reshape(repmat(cnf(:,1:N),k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
         knn_norms_squared = sum(knn_differences.*knn_differences,1);
-        riesz_weights = compute_weights(knn_norms_squared);
+        riesz_weights = compute_riesz(knn_norms_squared)./knn_norms_squared;
         gradient = bsxfun(@times,riesz_weights,knn_differences);
         gradient = reshape(gradient, dim, k_value, []);
         directions = reshape(sum(gradient,2), dim, []);
-        directions = directions/max(sqrt(sum(directions.*directions,1)));
+        directions = directions./sqrt(sum(directions.*directions,1));
         
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
         
-        cnf(:,1:N) = cnf(:,1:N) + directions .* step/iter;
+        cnf(:,1:N) = cnf(:,1:N) + directions .* step/(offset + iter);
         rads = sqrt(sum(cnf(:,1:N).*cnf(:,1:N),1));
         cnf(:,1:N) = cnf(:,1:N) ./ rads .* min(max(rads, r), R);
     end
@@ -172,7 +172,7 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
-if ~usejava('desktop')
+if ~usejava('desktop') && (plotit=='y' || plotit=='Y' || plotit==1)
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
 if dim==3 && exist('analyzeit','var') && (analyzeit=='y' || analyzeit=='Y' || analyzeit==1)
