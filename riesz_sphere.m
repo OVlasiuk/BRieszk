@@ -1,4 +1,4 @@
-function [cnf, en] = riesz_sphere(cnf,N,dim,s,plotit,silent)
+function cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 %RIESZ_SPHERE
 % cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 % Returns a configuration obtained from applying the gradient descent to
@@ -20,7 +20,7 @@ function [cnf, en] = riesz_sphere(cnf,N,dim,s,plotit,silent)
 %   Matlab's power function, which turns out to be not that great.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
 % silent -- pass 'y' or 1, etc., to suppress output to console.
-offset = 10;
+offset = 18;
 if ~exist('cnf','var')
     cnf = 1;
     N = 1000;
@@ -64,7 +64,7 @@ if s < dim
 else
     k_value = min(6 * dim, N-1);
     repel_steps = 50;
-    repel_cycles = 10;
+    repel_cycles = 6;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 if ~exist('silent','var') || ~silent
@@ -131,16 +131,18 @@ if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' |
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
 
-% fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-% inp = input('','s');
-% if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
-    en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
-                (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
-                (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
-    en = compute_riesz(en);
-    en = sum(sum(en(isfinite(en))));
-%     fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
-% end
 
+if length(dbstack) == 1
+    fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
+    inp = input('>> ','s');
+    if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
+        en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
+                    (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
+                    (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
+        en = compute_riesz(en);
+        en = sum(sum(en(isfinite(en))));
+        fprintf('The %3.2f-Riesz energy is \t %10.8f\n', s,en)
+    end
+end
 
 % dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)

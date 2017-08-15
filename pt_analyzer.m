@@ -1,6 +1,6 @@
 function pt_analyzer(cnf, in_domainF, figfactor, varargin)
 %PT_ANALYZER
-% pt_analyzer(cnf, in_domainF, densityF, figfactor, varargin)
+% pt_analyzer(cnf, in_domainF, figfactor, varargin)
 % Given a (dim)x(number of points)-array, will determine its separation
 % distance, distribution of distances to the nearest neighbors, and radii
 % of the largest holes. Provided an indicator function of the restricting
