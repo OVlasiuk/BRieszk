@@ -1,5 +1,9 @@
 # BRieszk
+<p align="center">
+<img src="https://raw.githubusercontent.com/OVlasiuk/BRieszk/master/sph_paisley.png" width="400">
+</p>
 
+---
 BRIESZK ('brisk') is a collection of (Matlab for now) routines that minimize the Riesz energy of N-point configurations, and do so fairly quickly, using nearest neighbor truncation. It was written for personal and internal use at the Vanderbilt University MinEnergy group.
 It works on Matlab R2016b+; earlier versions may pose compatibility issues.
 
