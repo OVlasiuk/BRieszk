@@ -1,6 +1,6 @@
 # BRieszk
 <p align="center">
-<img src="https://raw.githubusercontent.com/OVlasiuk/BRieszk/master/sph_paisley.png" width="400">
+<img src="https://raw.githubusercontent.com/OVlasiuk/BRieszk/master/sph_paisley.png" width="800">
 </p>
 
 ---
