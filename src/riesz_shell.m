@@ -20,8 +20,8 @@ function cnf = riesz_shell(cnf,n,N,r,R,dim,s,plotit,analyzeit,silent)
 % dim -- dimension of the ambient space; deduced from the first dimension
 %   of the cnf matrix, if any;
 % s -- exponent in the Riesz energy to be minimized; the default value is
-%   5.0.
-%   It is HIGHLY recommended to use one of the values {.5, 2.5, 5.0} for s,
+%   4.0.
+%   It is HIGHLY recommended to use one of the values {.5, 2., 4.} for s,
 %   as these are pre-coded, or to modify the source code. Otherwise you'll
 %   be using the Matlab's power function, which turns out to be not that
 %   great.

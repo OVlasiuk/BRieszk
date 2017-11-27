@@ -13,7 +13,7 @@ function cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
 % dim -- dimension of the ambient space; deduced from the first dimension
 %   of the cnf matrix, if any;
 % s -- exponent in the Riesz energy to be minimized; the default value is
-%   5.0.
+%   4.0.
 % s -- the exponent used in the Riesz kernel;
 %   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
@@ -25,7 +25,7 @@ if ~exist('cnf','var')
     cnf = 1;
     N = 1000;
     dim = 3;
-    s = 5.0;
+    s = 4.0;
     plotit = 1;
     silent = false;
 end

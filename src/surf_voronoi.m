@@ -1,14 +1,37 @@
-function [vorFig, triFig] = surf_voronoi(cnf, surfF, gradF)
+function [vorFig, triFig] = surf_voronoi(cnf, gradF)
 %SURF_VORONOI
+% [vorFig, triFig] = surf_voronoi(cnf, gradF)
 % Approximate Voronoi diagram on the level surface.
+% INPUT:
 % cnf -- 3x(num_pts), the node set to be processed
-% surfF -- the surface is defined by surfF(x,y,z) == 0;
 % gradF -- a function handle to evaluate the gradient to the surface at
 %   a point (x,y,z);
+% OUTPUT:
+% vorFig -- handle to the figure with the surface Voronoi diagram;
+% triFig -- handle to the surface triangulation with vertices at cnf.
+% Both are returned with the .Visible attribute set to 'off'.
+%
+% EXAMPLE of a configuration on a complicated surface:
+% warning('off','optim:fsolve:NonSquareSystem')
+% f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) + x(3).^2 .*(x(3).^2 - 5) + 11;
+% N = 1000;
+% x=zeros(3,N);
+% x0 = 5*rand(3,N)-2.5;
+% for i=1:N
+% x(:,i) = fsolve(f, x0(:,i),optimoptions('fsolve','Display','off'));
+% end
+% plot3(x(1,:),x(2,:),x(3,:),'.b')
+% pbaspect([1 1 1])
+% daspect([1 1 1])
+% axis vis3d
 
+
+% surfF -- the surface is defined by surfF(x,y,z) == 0;
 % gradF = @(x,y,z) [2*x; 2*y; 2*z];
 
-k_value = 40;
+% crossprod(u, v) = @(u, v) 
+
+k_value = 20;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
@@ -19,6 +42,7 @@ faces = zeros(10 * k_value * N, 3);         % not a real estimate, of course;
                                             % a bad upper bound is 
                                             % n choose 3                         
 f_ind = 0;
+%% Triangulate the cnf using surface normals
 for i=1:N
     nu = null( gradF(cnf(1,i), cnf(2,i), cnf(3,i) )');
     flatNN = nu \ ( cnf(:,i) - cnf(:,IDX(:,i)) );
@@ -33,7 +57,7 @@ faces = faces(logical(faces(:,1)),:);
 faces = sort(faces,2);
 faces = unique(faces,'rows');
 
-
+%% Draw the triangulation
 T = triangulation(faces, cnf(1,:)', cnf(2,:)', cnf(3,:)');
 C_Tri = round(rand(size(faces,1), 1) * 4);
 % % Plot the triangulation
@@ -54,8 +78,8 @@ daspect([1 1 1])
 set(gca, 'Clipping', 'off')
 axis vis3d
 
-% FaceVertexAlphaData!
- 
+
+%% Determine faces of the Voronoi diagram 
 voronois = T.circumcenter;         % long thin
 vorDiagramVerts = [cnf'; voronois];
 vorDiagramFaces = zeros(3*size(faces,1), 3);
@@ -82,7 +106,9 @@ for i=1:N
         numel(adjFaces) * ones(numel(adjFaces),1);
     fill_i = fill_i + numel(adjFaces);
 end
-    
+
+
+%% Draw the Voronoi diagram
 TVor = triangulation(vorDiagramFaces, vorDiagramVerts(:,1), vorDiagramVerts(:,2), vorDiagramVerts(:,3));
 vorFig = figure;
 set(vorFig, 'Visible', 'off');
@@ -94,8 +120,8 @@ set(TSVor,'FaceColor','flat',...
        'EdgeAlpha',0);
 hold on;
 TEdges = trisurf(vorDiagramEdges(:,[1 1 2]),vorDiagramVerts(:,1), vorDiagramVerts(:,2), vorDiagramVerts(:,3));
-% set(TEdges,'EdgeAlpha',.3 ...
-%        );
+set(TEdges,'EdgeAlpha',.3 ...      % determined the edge transparency 
+       );
 plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
 
 pbaspect([1 1 1])
@@ -110,18 +136,7 @@ axis off
 axis vis3d
 % camzoom(1.9);
 
-% 
-% % f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) + x(3).^2 .*(x(3).^2 - 5) + 11;
-% % N = 10000;
-% % x=zeros(3,N);
-% % x0 = 5*rand(3,N)-2.5;
-% % for i=1:N
-% % x(:,i) = fsolve(f, x0(:,i),optimoptions('fsolve','Display','off'));
-% % end
-% % plot3(x(1,:),x(2,:),x(3,:),'.b')
-% % pbaspect([1 1 1])
-% % daspect([1 1 1])
-% % axis vis3d
+
 % 
 % 
 % % g = @(x,y,z) (1 - z.^2) .* (2* y .* (y.^2 - 3 *x.^2) - 9* z.^2 + 1) + (x.^2 + y.^2).^2;
