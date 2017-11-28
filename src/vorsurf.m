@@ -1,4 +1,4 @@
-function [vorFig, triFig] = surf_voronoi(cnf, gradF)
+function [vorFig, triFig] = vorsurf(cnf, gradF)
 %SURF_VORONOI
 % [vorFig, triFig] = surf_voronoi(cnf, gradF)
 % Approximate Voronoi diagram on the level surface.

@@ -1,4 +1,4 @@
-% function [vorFig, triFig] = surf_min(cnf, gradF)
+% function [vorFig, triFig] = surf_min(cnf, surfF, gradF, )
 %SURF_VORONOI
 % [vorFig, triFig] = surf_voronoi(cnf, surfF, gradF)
 % Approximate Voronoi diagram on the level surface.
@@ -15,7 +15,15 @@
 % surfF = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) +...
 %                 x(3).^2 .*(x(3).^2 - 5) + 11;
 
-% EXAMPLE of a configuration on a complicated surface:
+
+% pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
+% dflts =  { 0            []      100.0   4.0     false       200    18       true};
+% [jitter, pullbackF, A, s, htrue, bins, offset, instats, ~] =...
+%      internal.stats.parseArgs(pnames, dflts, varargin{:});
+
+
+
+% EXAMPLE of producing a random configuration on a complicated surface:
 % warning('off','optim:fsolve:NonSquareSystem')
 % N = 1000;
 % cnf = zeros(3,N);
@@ -24,20 +32,38 @@
 % cnf(:,i) = fsolve(surfF, x0(:,i),optimoptions('fsolve','Display','off'));
 % end
 
+% EXAMPLE of a density defined by the Gaussian curvature:
+% Goldman, R. (2005). Curvature formulas for implicit curves and surfaces.
+% Computer Aided Geometric Design, 22(7), 632–658. 
+% doi:10.1016/j.cagd.2005.06.005
+
 % clear surfF;
-cnf = dlmread('./sconf.txt')';
+cnf = dlmread('../sconf.txt')';
 surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
     x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
 gradF = @(x) [...
-    2*x(1,:).*(x(1,:).^2 - 5) + 2*x(1,:).^3;
- 2*x(2,:).*(x(2,:).^2 - 5) + 2*x(2,:).^3;
- 2*x(3,:).*(x(3,:).^2 - 5) + 2*x(3,:).^3];
+    2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
+    2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
+    2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
+
+complementedlaplacianF = @(x) [...
+    (12*x(2,:).*x(2,:) - 10) .* (12*x(3,:).*x(3,:) - 10);
+    (12*x(1,:).*x(1,:) - 10) .* (12*x(3,:).*x(3,:) - 10);
+    (12*x(1,:).*x(1,:) - 10) .* (12*x(2,:).*x(2,:) - 10)...
+    ];
+
+squaredgradientF = @(x) gradF(x).^2;
+
+densityF = @(x)  sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
+    sum(squaredgradientF(x), 1).^2;
+
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% plot3(x(1,:),x(2,:),x(3,:),'.b')
-% pbaspect([1 1 1])
-% daspect([1 1 1])
-% axis vis3d
+plot3(x(1,:),x(2,:),x(3,:),'.b')
+pbaspect([1 1 1])
+daspect([1 1 1])
+axis vis3d
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 s = 4.0;
 repel_steps = 400;
 dim = 3;
@@ -88,14 +114,14 @@ for iter=1:repel_steps
     knn_norms_squared = sum(knn_differences.*knn_differences,1); 
 %% Weights using radial density
     riesz_weights = compute_riesz(knn_norms_squared);
-%     if isa(densityF,'function_handle')
-%         knn_density =  densityF(knn_cnf);   
-%         density_weights = compute_weights(knn_density);
-%         weights = s*density_weights .* riesz_weights ./ ...
-%                                                         knn_norms_squared;
-%     else
+    if isa(densityF,'function_handle')
+        knn_density =  densityF(knn_cnf);   
+        density_weights = compute_weights(knn_density);
+        weights = s*density_weights .* riesz_weights ./ ...
+                                                        knn_norms_squared;
+    else
         weights = s*riesz_weights./knn_norms_squared;
-%     end
+    end
 %% Sum up over the nearest neighbors    
     gradient = bsxfun(@times,weights,knn_differences);% -...
 %                       s*riesz_weights .* density_weights./knn_density .* cnf_repeated_concentric; 
