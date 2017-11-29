@@ -1,4 +1,4 @@
-function [vorFig, triFig] = vorsurf(cnf, gradF)
+function [vorFig, triFig] = vorsurf(cnf, gradF, densityF)
 %SURF_VORONOI
 % [vorFig, triFig] = surf_voronoi(cnf, gradF)
 % Approximate Voronoi diagram on the level surface.
@@ -31,7 +31,7 @@ function [vorFig, triFig] = vorsurf(cnf, gradF)
 
 % crossprod(u, v) = @(u, v) 
 
-k_value = 20;
+k_value = 40;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
@@ -59,7 +59,13 @@ faces = unique(faces,'rows');
 
 %% Draw the triangulation
 T = triangulation(faces, cnf(1,:)', cnf(2,:)', cnf(3,:)');
-C_Tri = round(rand(size(faces,1), 1) * 4);
+if isa(densityF,'function_handle')
+    C_Tri = densityF( cnf(:,faces(:)) );
+    C_Tri = reshape(C_Tri,[],3);
+    C_Tri = mean(C_Tri,2);
+else
+    C_Tri = round(rand(size(faces,1), 1) * 4);
+end
 % % Plot the triangulation
 triFig = figure;
 set(triFig, 'Visible', 'off');
@@ -75,7 +81,7 @@ set(TS,'FaceColor','flat',...
 %        'EdgeAlpha',1);
 pbaspect([1 1 1])
 daspect([1 1 1])
-set(gca, 'Clipping', 'off')
+% set(gca, 'Clipping', 'off')
 axis vis3d
 
 
@@ -128,11 +134,11 @@ pbaspect([1 1 1])
 daspect([1 1 1])
 view(3)
 % campos([-45.6343  -59.4699   43.2793])
-set(gca, 'Clipping', 'off')
-set(gca,'xtick','')
-set(gca,'ytick','')
-set(gca,'ztick','')
-axis off
+% set(gca, 'Clipping', 'off')
+% set(gca,'xtick','')
+% set(gca,'ytick','')
+% set(gca,'ztick','')
+% axis off
 axis vis3d
 % camzoom(1.9);
 
