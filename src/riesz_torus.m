@@ -8,16 +8,21 @@ function cnf = riesz_torus(cnf,N,s,r,R,plotit,silent)
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points)
 %   here; 
 %  a) call without input arguments to use all the default settings 
-%   (cnf, 500, 6, 1, 3), cnf random as below;
+%   (cnf, 500, 4, 1, 3), cnf random as below;
 %  b) pass ONE to draw from the uniform distribution IN ANGULAR measure 
 %   (d\phi \times d\psi) using your values of N,s,r,R;
 % N -- number of points in the random configuration to be generated
 %   (ignored if an initial cnf is passed);
-% s -- exponent in the Riesz energy to be minimized; default value is 6.0;
+% s -- the exponent used in the Riesz kernel;
+%   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
+%   pre-coded, or to modify the source code. Otherwise you'll be using the 
+%   Matlab's power function, which turns out to be not that great.
 % r -- minor radius of the torus;
 % R -- major radius of the torus.
 % plotit -- pass 'y' or 1, etc., to plot the produced configuration.
 % silent -- pass 'y' or 1, etc., to suppress output to console.
+
+%% Cnf and torus parameters
 if ~exist('silent','var')
     silent = false;
 end
@@ -33,14 +38,7 @@ end
 if ~exist('R','var')
     R = 3.0;
 end
-if ~exist('cnf','var')
-    cnf = 1;       
-    N = 500;
-end
-k_value = 80;  
-repel_steps = 100;
-cycles = 8;
-offset = 18;
+%% Maps
 torus = @(phi, theta,r,R) [ (R+r*cos(theta)).*cos(phi);...
                             (R+r*cos(theta)).*sin(phi);...
                             r*sin(theta)];
@@ -50,6 +48,24 @@ jtorus = @(phi, theta,r,R) [-(R+r*cos(theta)).*sin(phi); ...
                              -r*sin(theta).*cos(phi);...
                              -r*sin(theta).*sin(phi);...
                              r*cos(theta)];
+%% 
+if ~exist('cnf','var')  || isscalar(cnf)
+    if ~exist('silent','var') || ~silent
+        fprintf( '\nStarting with a random point set.')
+    end
+    if ~exist('N','var')
+        N = 500;
+    end
+    if ~exist('dim','var')
+        dim = 3;
+    end
+    cnf = 2*pi*rand(2,N);
+    cnf = torus(cnf(1,:),cnf(2,:),r,R);
+else
+    [dim, N] = size(cnf);
+end
+
+
 if ~ismatrix(cnf) && (cnf==0 || cnf ==1)
     cnf = 2*pi*rand(2,N);
     cnf = torus(cnf(1,:),cnf(2,:),r,R);
@@ -57,15 +73,6 @@ else
     [~, N] = size(cnf);
 end
 
-if isscalar(cnf)
-    if ~exist('silent','var') || ~silent
-        fprintf( '\nStarting with a random point set.')
-    end
-    cnf = 2*pi*rand(2,N);
-    cnf = torus(cnf(1,:),cnf(2,:),r,R);
-else
-    [dim, N] = size(cnf);
-end
 
 switch s
     case 4.0
@@ -77,17 +84,22 @@ switch s
     otherwise
         compute_weights = @(x) sqrt(x).^(-s);
 end
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Flow cycle parameters
+k_value = 499;  
+repel_steps = 100;
+cycles = 8;
+offset = 18;
+
+%% Talk  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
 if ~exist('silent','var') || ~silent
     fprintf( '\nWe will be minimizing the %f-Riesz energy of %d points on the',s,N)
     fprintf( '\n3-dimensional torus with radii R=%3.2f and r=%3.2f\n\n', R,r)
 end
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Main % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
 pbaspect([1 1 1])
-colormap(spring)
 
 syms phi theta;
 x = (R+r*cos(theta))*cos(phi);
@@ -142,12 +154,13 @@ for cycle=1:cycles
         toc
     end
 end
-msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
+msize = ceil(max(1, 22-log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.r','MarkerSize',msize)
     pbaspect([1 1 1])
     daspect([1 1 1])
     set(gca, 'Clipping', 'off')
+    colormap(gray)
     axis vis3d
 end
 if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)

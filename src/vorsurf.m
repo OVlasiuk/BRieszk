@@ -66,7 +66,8 @@ if isa(densityF,'function_handle')
 else
     C_Tri = round(rand(size(faces,1), 1) * 4);
 end
-% % Plot the triangulation
+
+%% Plot the triangulation
 triFig = figure;
 set(triFig, 'Visible', 'off');
 TS = trisurf(T);
@@ -83,7 +84,6 @@ pbaspect([1 1 1])
 daspect([1 1 1])
 % set(gca, 'Clipping', 'off')
 axis vis3d
-
 
 %% Determine faces of the Voronoi diagram 
 voronois = T.circumcenter;         % long thin
