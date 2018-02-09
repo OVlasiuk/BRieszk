@@ -131,7 +131,7 @@ for cycle=1:cycles
         directions = directions/mean(sqrt(sum(directions.*directions,1)));
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %         
         [tangent_angles1, tangent_angles2] = ...
-            torus_inversion(cnf(1,:),cnf(2,:),cnf(3,:),r,R);
+            f_torinv(cnf(1,:),cnf(2,:),cnf(3,:),r,R);
         tangent_planes = jtorus(tangent_angles1,tangent_angles2,r,R);
         tangent_planes1 = tangent_planes(1:dim,:);
         tangent_planes2 = tangent_planes(dim+1:end,:);

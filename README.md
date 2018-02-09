@@ -12,12 +12,15 @@ Apart from the optimization routines, there are also functions to produce neares
 DISCLAIMER: if any of these routines performs fast, it is only due to all the calculations being done in a (possibly, very) sloppy manner. The end result is by no means guaranteed to be a full-energy minimizer, even a local one. If you're lucky, it may be _somewhat close_ to a minimizer, whatever 'close' could mean here.
 
 ## List of functions:
-* dcompare(cnf, densityF, plotit) <br>
-Compares node separation distances and values of density at these nodes.
-* pt_analyzer(cnf, in_domainF) <br>
+
+* f_analyzer(cnf, in_domainF) <br>
 Nearest neighbor statistics and domain inclusion.
+* f_dcompare(cnf, densityF, plotit) <br>
+Compares node separation distances and values of density at these nodes.
+* f_repel
+* f_torinv(x, y, z, r, R) <br>
+Transforms Cartesian ambient coordinates to the intrinsic angles.
+* f_vorsurf
 * riesz_shell(cnf, n, N, r, R, dim, s, plotit, analyzeit, silent) <br>
 * riesz_sphere(cnf, N, dim, s, plotit, silent)
 * riesz_torus(cnf, N, s, r, R)
-* torus_inversion(x, y, z, r, R) <br>
-Transforms Cartesian ambient coordinates to the intrinsic angles.

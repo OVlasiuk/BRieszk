@@ -27,7 +27,7 @@
 % doi:10.1016/j.cagd.2005.06.005
 
 % clear surfF;
-cnf = dlmread('../cnf40k_2.txt')';
+cnf = dlmread('../cnf40k_3.txt')';
 
 surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
     x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
@@ -105,7 +105,7 @@ for iter=1:repel_steps
 %% Weights using radial density
     riesz_weights = compute_riesz(knn_norms_squared);
     if isa(densityF,'function_handle')
-        knn_density =  abs(densityF(knn_cnf)) + 1;   
+        knn_density =  abs(densityF(knn_cnf)) + .1;   
         weights = s* riesz_weights ./ knn_norms_squared ./ knn_density;
     else
         weights = s*riesz_weights./knn_norms_squared;

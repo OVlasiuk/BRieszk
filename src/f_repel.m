@@ -15,7 +15,8 @@ function cnf = repel(cnf,...
 % in_domainF.
 % 
 % cnf -- dim x N matrix with the points;
-% N_moving -- move only the first N_moving points in cnf;
+% N_moving -- move only the first N_moving points in cnf; the rest remain
+%   unchanged;
 % k_value -- the number of nearest neighbors used in the repel algorithm;
 % repel_steps -- iterations of the step process to be made;
 % densityF -- the target radial density: desired distance to the nearest 
@@ -120,7 +121,6 @@ for iter=1:repel_steps
     end
 %% Vectors from nearest neighbors    
     cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
-    cnf_repeated_concentric = cnf_repeated./sqrt(sum(cnf_repeated.*cnf_repeated,1));
     knn_cnf = cnf(:,IDX);
     knn_differences = cnf_repeated - knn_cnf;    
     knn_norms_squared = sum(knn_differences.*knn_differences,1); 
