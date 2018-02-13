@@ -1,4 +1,4 @@
-% function [vorFig, triFig] = riesz_surf(cnf, surfF, gradF, )
+function cnf = riesz_surf(cnf, surfF, gradF)
 %RIESZ_SURF
 %  
 % INPUT:
@@ -27,7 +27,7 @@
 % doi:10.1016/j.cagd.2005.06.005
 
 % clear surfF;
-cnf = dlmread('../cnf40k_3.txt')';
+% cnf = dlmread('../cnf40k_3.txt')';
 
 surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
     x(3,:).^2 .*(x(3,:).^2 - 5) + 11;

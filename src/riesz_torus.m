@@ -1,43 +1,40 @@
-function cnf = riesz_torus(cnf,N,s,r,R,plotit,silent)
+function cnf = riesz_torus(cnf, varargin)
 % RIESZ_TORUS
-% cnf = riesz_torus(cnf,N,s,r,R)
+% cnf = riesz_torus(cnf,'NAME1',VALUE1,...,'NAMEN',VALUEN)
 % Returns a configuration obtained from performing the gradient descent on
 % the given (or random) N-point collection on the torus with radii R and r,
 % r <= R.
+% Call without input arguments to use the defaults.
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % 
-% cnf -- pass your initial configuration as a matrix (dim)x(#of points)
-%   here; 
-%  a) call without input arguments to use all the default settings 
-%   (cnf, 500, 4, 1, 3), cnf random as below;
-%  b) pass ONE to draw from the uniform distribution IN ANGULAR measure 
-%   (d\phi \times d\psi) using your values of N,s,r,R;
-% N -- number of points in the random configuration to be generated
-%   (ignored if an initial cnf is passed);
-% s -- the exponent used in the Riesz kernel;
-%   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
+% cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
+%   pass ZERO to draw a random distribution using your N, dim, r, R, s;
+% Optional argument name/value pairs:
+% Name          Value
+%
+% 'N'           number of points in the random configuration to be generated
+%               (ignored if an initial cnf is passed); default: 500
+% 'dim'         dimension of the ambient space; deduced from the first dimension
+%               of the cnf matrix, if given; default: 3
+% 'r'           minor radius of the torus; default: 1.0
+% 'R'           major radius of the torus; default: 3.0
+% 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
+%               configuration; default: true
+% 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: false
+% 's'           the exponent used in the Riesz kernel;
+%               default: 4.0
+%   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
-% r -- minor radius of the torus;
-% R -- major radius of the torus.
-% plotit -- pass 'y' or 1, etc., to plot the produced configuration.
-% silent -- pass 'y' or 1, etc., to suppress output to console.
 
-%% Cnf and torus parameters
-if ~exist('silent','var')
-    silent = false;
-end
-if ~exist('plotit','var')
-    plotit = 1;
-end
-if ~exist('s','var')
-    s = 4.0;
-end
-if ~exist('r','var')
-    r = 1.0;
-end
-if ~exist('R','var')
-    R = 3.0;
-end
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Initialize variables
+pnames = {'N' 'dim' 'r'     'R'     'plotit' 'silent'    's' };
+dflts =  {500  3    1.0     3.0    true      false      4.0 };
+[N, dim, r, R, plotit, silent, s, ~] =...
+     internal.stats.parseArgs(pnames, dflts, varargin{:});
 %% Maps
 torus = @(phi, theta,r,R) [ (R+r*cos(theta)).*cos(phi);...
                             (R+r*cos(theta)).*sin(phi);...
@@ -48,31 +45,17 @@ jtorus = @(phi, theta,r,R) [-(R+r*cos(theta)).*sin(phi); ...
                              -r*sin(theta).*cos(phi);...
                              -r*sin(theta).*sin(phi);...
                              r*cos(theta)];
-%% 
-if ~exist('cnf','var')  || isscalar(cnf)
-    if ~exist('silent','var') || ~silent
+ 
+%% Configuration 
+if ~exist('cnf','var') || isscalar(cnf)
+    if ~silent
         fprintf( '\nStarting with a random point set.')
     end
-    if ~exist('N','var')
-        N = 500;
-    end
-    if ~exist('dim','var')
-        dim = 3;
-    end
-    cnf = 2*pi*rand(2,N);
-    cnf = torus(cnf(1,:),cnf(2,:),r,R);
+	cnf = 2*pi*rand(2,N);
+    cnf = torus(cnf(1,:),cnf(2,:),r,R);   
 else
-    [dim, N] = size(cnf);
+    [ dim, N ]= size(cnf);
 end
-
-
-if ~ismatrix(cnf) && (cnf==0 || cnf ==1)
-    cnf = 2*pi*rand(2,N);
-    cnf = torus(cnf(1,:),cnf(2,:),r,R);
-else
-    [~, N] = size(cnf);
-end
-
 
 switch s
     case 4.0
@@ -85,10 +68,16 @@ switch s
         compute_weights = @(x) sqrt(x).^(-s);
 end
 %% Flow cycle parameters
-k_value = 499;  
-repel_steps = 100;
-cycles = 8;
 offset = 18;
+if s < dim
+    k_value = N-1;  
+    repel_steps = 100;
+    cycles = 8;
+else
+    k_value = min(6 * dim, N-1);
+    repel_steps = 50;
+    cycles = 6;
+end
 
 %% Talk  % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 
