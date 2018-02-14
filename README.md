@@ -1,6 +1,6 @@
 # BRieszk
 <p align="center">
-<img src="https://raw.githubusercontent.com/OVlasiuk/BRieszk/master/sph_paisley.png" width="800">
+<img src="https://raw.githubusercontent.com/OVlasiuk/BRieszk/master/img/sph_paisley.png" width="800">
 </p>
 
 ---
@@ -16,11 +16,11 @@ DISCLAIMER: if any of these routines performs fast, it is only due to all the ca
 * f_analyzer.m -- Nearest neighbor statistics and domain inclusion.
 * f_cnfinit.m -- An example of producing a random configuration on an implicit surface.
 * f_dcompare.m -- Compares node separation distances and values of density at these nodes.
-* f_repel.m --
-* f_torinv.m -- Transforms Cartesian ambient coordinates to the intrinsic angles on a 2-torus.
-* f_vorsurf.m --
-* riesz_shell.m --
-* riesz_sphere.m --
-* riesz_surf.m --
-* riesz_torus.m --
+* f_repel.m -- Compute a naive repulsive flow using the Riesz kernel.
+* f_torinv.m -- Transform Cartesian ambient coordinates to the intrinsic angles on a 2-torus.
+* f_vorsurf.m -- Produce a Voronoi tessellation of a surface.
+* riesz_shell.m -- Uniform node distribution in a spherical shell.
+* riesz_sphere.m -- ... on a sphere.
+* riesz_surf.m -- ... on an implicit surface.
+* riesz_torus.m -- ... on (the surface of) a 2-torus.
 

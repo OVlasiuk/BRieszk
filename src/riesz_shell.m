@@ -151,12 +151,13 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     colormap(autumn)    
     mesh(X,Y,Z,'EdgeAlpha',.1,'FaceAlpha',.1)
     p1 = plot3(cnf(1,1:N),cnf(2,1:N),cnf(3,1:N),'.k','MarkerSize',msize);
+    s1 = N + " interior nodes after redistribution (may be on the surface)";
+    s2 = "2*" + M + " fixed surface nodes";
     if M > 0
         p2 = plot3(cnf(1,N+1:end),cnf(2,N+1:end),cnf(3,N+1:end),'ob','MarkerSize',.4*msize);
-        leg=legend([p1; p2],'N interior nodes after redistribution (may be on the surface)',...
-    '2*n initial surface nodes ');
+        leg=legend([p1; p2],s1,s2);
     else 
-        leg=legend(p1,'N interior nodes after redistribution (may be on the surface)');
+        leg=legend(p1,s1);
     end
     leg.Location = 'south';
     leg.FontSize = 12;
