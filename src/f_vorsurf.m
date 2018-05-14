@@ -31,7 +31,7 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF)
 
 % crossprod(u, v) = @(u, v) 
 
-k_value = 40;
+k_value = 5;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 

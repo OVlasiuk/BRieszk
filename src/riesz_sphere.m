@@ -112,15 +112,18 @@ end
 % step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit)
-    colormap(winter)
+	colormap white
     [x,y,z] = sphere(30);
-    mesh(x,y,z,'EdgeAlpha',.3)
+    surf(x,y,z,'EdgeAlpha',.3,'FaceAlpha',.8)
     hold on
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
+%     scatter3(cnf(1,:),cnf(2,:),cnf(3,:),'MarkerFaceColor','r',...
+%         'MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2); 
     pbaspect([1 1 1])
     daspect([1 1 1])
     set(gca, 'Clipping', 'off')
     axis vis3d
+    hold off
 else
     if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
         pbaspect([1 1 1]);

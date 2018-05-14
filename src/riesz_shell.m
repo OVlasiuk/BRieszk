@@ -7,33 +7,33 @@ function cnf = riesz_shell(cnf,varargin)
 % respectively. The 2n points on the boundaries are held fixed.
 % Call without input arguments to use the defaults.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% 
-% cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
-%   pass ZERO to draw from the random vol-uniform distribution using your 
+%
+% cnf -- pass your initial configuration as a matrix (dim)x(#of points);
+%   pass ZERO to draw from the random vol-uniform distribution using your
 %   M, N, r, R, dim, s;
 % Optional argument name/value pairs:
 % Name          Value
 %
 % 'M'           number of points held on the inner and outer boundaries (M
-%               points on each). If cnf is passed, deduced as the mean of 
+%               points on each). If cnf is passed, deduced as the mean of
 %               the number of points with the min and max norms; default: 0
 % 'N'           number of points to be generated in the interior of the
 %               shell (ignored if a cnf is passed); default: 20,000
-% 'r', 'R'      radii of the inner and outer boundary spheres; if a cnf 
+% 'r', 'R'      radii of the inner and outer boundary spheres; if a cnf
 %               array is passed, r and R are deduced as the min and max
 %               vector norm of the columns of cnf; defaults: 1.0 and 1.2
 % 'dim'         dimension of the ambient space; deduced from the first
 %               dimension of the cnf matrix, if given; default: 3
-% 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
+% 'plotit'      pass 'y' or 1, true, etc., to plot the produced
 %               configuration; default: true
 % 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
 %               default: false
 % 'analyzeit'	pass 'y' or 1, true, etc., to invoke f_analyzer on the
-%               produced configuration; default: false    
+%               produced configuration; default: false
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
-%   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
-%   pre-coded, or to modify the source code. Otherwise you'll be using the 
+%   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are
+%   pre-coded, or to modify the source code. Otherwise you'll be using the
 %   Matlab's power function, which turns out to be not that great.
 
 
@@ -42,7 +42,7 @@ function cnf = riesz_shell(cnf,varargin)
 pnames = {'M'   'N'     'r'  'R' 'dim' 'plotit' 'silent' 'analyzeit' 's' };
 dflts =  {0  20000   1.0  1.2   3    true    false    false       4.0 };
 [M, N, r, R, dim, plotit, silent, analyzeit, s, ~] =...
-     internal.stats.parseArgs(pnames, dflts, varargin{:});
+    internal.stats.parseArgs(pnames, dflts, varargin{:});
 if ~exist('cnf','var') || isscalar(cnf)
     if ~silent
         fprintf( '\nStarting with a random point set.')
@@ -137,7 +137,7 @@ for cycle=1:repel_cycles
         toc
     end
 end
-    
+
 % [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
 % step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
@@ -148,7 +148,7 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     mesh(X,Y,Z,'EdgeAlpha',.3,'FaceAlpha',1)
     hold on
     X=R*x; Y=R*y; Z=R*z;
-    colormap(autumn)    
+    colormap(autumn)
     mesh(X,Y,Z,'EdgeAlpha',.1,'FaceAlpha',.1)
     p1 = plot3(cnf(1,1:N),cnf(2,1:N),cnf(3,1:N),'.k','MarkerSize',msize);
     s1 = N + " interior nodes after redistribution (may be on the surface)";
@@ -156,7 +156,7 @@ if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     if M > 0
         p2 = plot3(cnf(1,N+1:end),cnf(2,N+1:end),cnf(3,N+1:end),'ob','MarkerSize',.4*msize);
         leg=legend([p1; p2],s1,s2);
-    else 
+    else
         leg=legend(p1,s1);
     end
     leg.Location = 'south';

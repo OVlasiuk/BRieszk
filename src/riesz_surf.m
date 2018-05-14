@@ -1,18 +1,35 @@
-function cnf = riesz_surf(cnf, surfF, gradF)
+% function cnf = riesz_surf(cnf, surfF, gradF)
 %RIESZ_SURF
-%  
-% INPUT:
-% cnf -- 3x(num_pts), the node set to be processed
-% gradF -- a function handle to evaluate the gradient to the surface at
-%   a point (x,y,z);
-% OUTPUT:
-% vorFig -- handle to the figure with the surface Voronoi diagram;
-% triFig -- handle to the surface triangulation with vertices at cnf.
-% Both are returned with the .Visible attribute set to 'off'.
-%
-
-% surfF = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) +...
-%                 x(3).^2 .*(x(3).^2 - 5) + 11;
+% cnf = riesz_surf(cnf, surfF, gradF)
+% Returns a configuration obtained from applying the gradient descent to
+% the given (or random) N-point collection on the implicit surface defined
+% by surfF(x) = 0.
+% Call without input arguments to use the defaults.
+% NOTE: both surfF and gradF must accept matrices of size (dim)x(#of points)
+% 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% 
+% cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
+%        input `edit f_cnfinit.m` in the prompt to see an example of how
+%        such a configuration can be generated (in the BRieszk folder).
+% Optional argument name/value pairs:
+% Name          Value
+% 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: false
+% 's'           the exponent used in the Riesz kernel;
+%               default: 4.0
+%   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
+%   pre-coded, or to modify the source below. Otherwise you'll be using the 
+%   Matlab's power function, which turns out to be not that great.
+if nargin == 0
+    surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
+        x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
+    gradF = @(x) [...
+        2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
+        2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
+        2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
+    cnf = f_cnfinit(20000, surfF);
+end
 
 % pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
 % dflts =  { 0            []      100.0   4.0     false       200    18       true};
@@ -28,13 +45,6 @@ function cnf = riesz_surf(cnf, surfF, gradF)
 
 % clear surfF;
 % cnf = dlmread('../cnf40k_3.txt')';
-
-surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
-    x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
-gradF = @(x) [...
-    2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
-    2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
-    2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
 
 complementedlaplacianF = @(x) [...
     (12*x(2,:).*x(2,:) - 10) .* (12*x(3,:).*x(3,:) - 10);
@@ -54,17 +64,8 @@ gg = @(x,y,z) [2*x*(x^2 - 5) + 2*x^3
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 N = 40000;
-% cnf = cnfinit(N, surfF);
-% cnf = dlmread('../sconf40k.txt')';
 N_moving = size(cnf,2);
-% N = size(cnf,2);
 
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% plot3(x(1,:),x(2,:),x(3,:),'.b')
-% pbaspect([1 1 1])
-% daspect([1 1 1])
-% axis vis3d
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 s = 4.0;
 repel_steps = 1000;

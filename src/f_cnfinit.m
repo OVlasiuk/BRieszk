@@ -1,5 +1,7 @@
-function cnf = cnfinit(N, surfF)
-% EXAMPLE of producing a random configuration on a complicated surface:
+function cnf = f_cnfinit(N, surfF)
+% F_CNFINIT
+% cnf = f_cnfinit(N, surfF)
+% Example of how to produce a random configuration on a complicated surface:
 warning('off','optim:fsolve:NonSquareSystem')
 cnf = zeros(3,N);
 x0 = 5*rand(3,N)-2.5;
