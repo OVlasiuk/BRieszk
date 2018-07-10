@@ -6,21 +6,25 @@ function [cnf, en] = riesz_cube(cnf,N,dim,s,plotit,silent)
 % Call without input arguments to use the defaults.
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
-%   pass ZERO to draw from the Gaussian random distribution using your 
-%   N,dim,s;
-% N -- number of points in the random configuration to be generated
-%   (ignored if an initial cnf is being passed);
-% dim -- dimension of the ambient space; deduced from the first dimension
-%   of the cnf matrix, if any;
-% s -- exponent in the Riesz energy to be minimized; the default value is
-%   4.0.
-% s -- the exponent used in the Riesz kernel;
-%   It is HIGHLY recommended to use either s=4.0 or s=0.5, as these are 
+%   pass ZERO to draw from the uniform random distribution using your 
+%   N, dim, s;
+% Optional argument name/value pairs:
+% Name          Value
+%
+% 'N'           number of points in the random configuration to be generated
+%               (ignored if an initial cnf is passed); default: 1000
+% 'dim'         dimension of the ambient space; deduced from the first dimension
+%               of the cnf matrix, if given; default: 3
+% 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
+%               configuration; default: true
+% 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: false
+% 's'           the exponent used in the Riesz kernel;
+%               default: 4.0
+%   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
-% plotit -- pass 'y' or 1, etc., to plot the produced configuration.
-% silent -- pass 'y' or 1, etc., to suppress output to console.
-offset = 18;
+
 if ~exist('cnf','var')
     cnf = 1;
     N = 1000;
@@ -47,7 +51,7 @@ if ~exist('s', 'var')
     s = 4.0;
 end
 switch s
-    case 4.0
+case 4.0
         compute_riesz = @(x) 1./x./x;
     case 2.0
         compute_riesz = @(x) 1./x;
@@ -57,6 +61,8 @@ switch s
         compute_riesz = @(x) sqrt(x).^(-s);
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Flow cycle parameters
+offset = 18;
 if s < dim
     k_value = N-1;  
     repel_steps = 100;
@@ -71,8 +77,6 @@ if ~exist('silent','var') || ~silent
     fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
     fprintf( '\n%d-dimensional unit cube.\n\n', dim-1)
 end
-% double-check we're on the sphere:
-% - this is faster than normc in Matlab 2016b
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
@@ -93,12 +97,12 @@ for cycle=1:repel_cycles
         gradient = bsxfun(@times,riesz_weights,knn_differences);
         gradient = reshape(gradient, dim, k_value, []);
         gradient = reshape(sum(gradient,2), dim, []);
-%         tangents = gradient-bsxfun(@times,sum(cnf.*gradient,1),cnf); 
+        %         tangents = gradient-bsxfun(@times,sum(cnf.*gradient,1),cnf); 
         % computing scalar products like so only works because we are on 
         % the unit sphere
         gradient = gradient./(sqrt(sum(gradient.^2,1)));
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
-%         alpha = min(1, step./sqrt(sum(tangents.*tangents,1)));
+        %         alpha = min(1, step./sqrt(sum(tangents.*tangents,1)));
         cnf = cnf + gradient .* step/(offset+iter);
         cnf(cnf>1) = 2-cnf(cnf>1);
         cnf(cnf<0) = -cnf(cnf<0);
@@ -122,19 +126,21 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
-if ~usejava('desktop')
+if ~usejava('desktop') && (plotit=='y' || plotit=='Y' || plotit==1 || plotit == true)
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
 
-fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-inp = input('','s');
-if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
-    en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
-                (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
-                (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
-    en = compute_riesz(en);
-    en = sum(sum(en(isfinite(en))));
-    fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
+if ~exist('silent','var') || ~silent || length(dbstack) == 1 
+    fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
+    inp = input('','s');
+    if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
+        en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
+        (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
+        (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
+        en = compute_riesz(en);
+        en = sum(sum(en(isfinite(en))));
+        fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
+end
 end
 
 

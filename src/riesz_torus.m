@@ -145,12 +145,7 @@ for cycle=1:cycles
 end
 msize = ceil(max(1, 22-log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.r','MarkerSize',msize)
-    pbaspect([1 1 1])
-    daspect([1 1 1])
-    set(gca, 'Clipping', 'off')
-    colormap(gray)
-    axis vis3d
+    pplot(cnf)
 end
 if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     print(mfilename,'-dpdf','-r300','-bestfit')

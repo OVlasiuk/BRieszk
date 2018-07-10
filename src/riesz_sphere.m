@@ -116,13 +116,7 @@ if dim==3 && exist('plotit','var') && (plotit)
     [x,y,z] = sphere(30);
     surf(x,y,z,'EdgeAlpha',.3,'FaceAlpha',.8)
     hold on
-    plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
-%     scatter3(cnf(1,:),cnf(2,:),cnf(3,:),'MarkerFaceColor','r',...
-%         'MarkerFaceAlpha',.2,'MarkerEdgeAlpha',.2); 
-    pbaspect([1 1 1])
-    daspect([1 1 1])
-    set(gca, 'Clipping', 'off')
-    axis vis3d
+    pplot(cnf)
     hold off
 else
     if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
@@ -135,17 +129,17 @@ if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' |
 end
 
 
-if length(dbstack) == 1
-    fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-    inp = input('>> ','s');
-    if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
-        en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
-                    (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
-                    (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
-        en = compute_riesz(en);
-        en = sum(sum(en(isfinite(en))));
-        fprintf('The %3.2f-Riesz energy is \t %10.8f\n', s,en)
-    end
-end
+% if ~exist('silent','var') || ~silent || length(dbstack) == 1
+%     fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
+%     inp = input('>> ','s');
+%     if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
+%         en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
+%                     (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
+%                     (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
+%         en = compute_riesz(en);
+%         en = sum(sum(en(isfinite(en))));
+%         fprintf('The %3.2f-Riesz energy is \t %10.8f\n', s,en)
+%     end
+% end
 
 % dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)

@@ -142,7 +142,7 @@ end
 % step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    colormap(winter)
+    colormap(white)
     [x,y,z] = sphere(30);
     X=r*x; Y=r*y; Z=r*z;
     mesh(X,Y,Z,'EdgeAlpha',.3,'FaceAlpha',1)
