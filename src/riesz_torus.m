@@ -1,10 +1,11 @@
-function cnf = riesz_torus(cnf, varargin)
+function out = riesz_torus(cnf, varargin)
 % RIESZ_TORUS
 % cnf = riesz_torus(cnf,'NAME1',VALUE1,...,'NAMEN',VALUEN)
 % Returns a configuration obtained from performing the gradient descent on
 % the given (or random) N-point collection on the torus with radii R and r,
 % r <= R.
 % Call without input arguments to use the defaults.
+% Large outputs without output arguments (assignment) are suppressed.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
@@ -21,6 +22,10 @@ function cnf = riesz_torus(cnf, varargin)
 % 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
 %               configuration; default: true
 % 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: true
+% 'saveplot'    pass 'y' or 1, true, etc., to save the plot;
+%               default: false
+% 'saveit'      pass 'string' to save output into a file named 'string';
 %               default: false
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
@@ -30,10 +35,10 @@ function cnf = riesz_torus(cnf, varargin)
 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-%% Initialize variables
-pnames = {'N' 'dim' 'r'     'R'     'plotit' 'silent'    's' };
-dflts =  {500  3    1.0     3.0    true      false      4.0 };
-[N, dim, r, R, plotit, silent, s, ~] =...
+%% Initialize variables 
+pnames={'N' , 'dim' , 'r' , 'R' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 's'};
+dflts={1000 , 3     , 1.0 , 3.0 , true     , true     , false    , false      , 4.0};
+[N , dim , r , R , plotit , silent , saveit , saveplot , s, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
 %% Maps
 torus = @(phi, theta,r,R) [ (R+r*cos(theta)).*cos(phi);...
@@ -143,24 +148,25 @@ for cycle=1:cycles
         toc
     end
 end
-msize = ceil(max(1, 22-log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
     pplot(cnf)
 end
-if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    print(mfilename,'-dpdf','-r300','-bestfit')
+
+%% Output and saving 
+if nargout()>0 || N<50
+    out=cnf;
+else
+    out = "Refusing to output into console; see helpstring.";
+end
+
+if saveplot
+    savehere = string(mfilename) + "_s_" + string(s) + "_N_" + string(N);
+    disp("Saving figure to file: " + savehere)
+    print(char(savehere),'-dpdf','-r300','-bestfit')
 end
 
 
-% dlmwrite('cnf.out',cnf','delimiter','\t');
-
-
-
-% % % % % % % % % % % % Sparse implementation
-%         tic
-%         spatangents = sparse(I(:), J(:), tangent_planes(:))\reshape(normals,[],1);
-%         spatangents = bsxfun(@times, spatangents', reshape(tangent_planes,dim,[]));
-%         spatangents = reshape(spatangents, dim, dim-1,[]);
-%         spatangents = reshape(sum(spatangents, 2),dim,[]);
-%         toc
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+if isstr(saveit)
+    disp("Saving configuration to file: " + saveit)
+    dlmwrite(saveit,cnf','delimiter','\t','precision',10)
+end

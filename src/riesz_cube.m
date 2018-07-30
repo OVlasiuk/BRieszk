@@ -1,9 +1,11 @@
-function [cnf, en] = riesz_cube(cnf,N,dim,s,plotit,silent)
+function out = riesz_cube(cnf,varargin)
 %RIESZ_SPHERE
-% cnf = riesz_sphere(cnf,N,dim,s,plotit,silent)
+% cnf = riesz_sphere(cnf,'NAME1',VALUE1,...,'NAMEN',VALUEN)
 % Returns a configuration obtained from applying the gradient descent to
-% the given (or random) N-point collection in the unit cube.
+% the given (or random) N-point collection on the unit cube.
 % Call without input arguments to use the defaults.
+% Large outputs without output arguments (assignment) are suppressed.
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
 %   pass ZERO to draw from the uniform random distribution using your 
@@ -18,6 +20,10 @@ function [cnf, en] = riesz_cube(cnf,N,dim,s,plotit,silent)
 % 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
 %               configuration; default: true
 % 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: true
+% 'saveplot'    pass 'y' or 1, true, etc., to save the plot;
+%               default: false
+% 'saveit'      pass 'string' to save output into a file named 'string';
 %               default: false
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
@@ -25,33 +31,22 @@ function [cnf, en] = riesz_cube(cnf,N,dim,s,plotit,silent)
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
 
-if ~exist('cnf','var')
-    cnf = 1;
-    N = 1000;
-    dim = 3;
-    s = 4.0;
-    plotit = 1;
-    silent = false;
-end
-if isscalar(cnf)
-    if ~exist('silent','var') || ~silent
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Initialize variables
+pnames={'N' , 'dim' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 's'};
+dflts={1000 , 3     , true     , true     , false    , false      , 4.0};
+[N, dim, plotit, silent, saveit, saveplot, s, ~] =...
+     internal.stats.parseArgs(pnames, dflts, varargin{:});
+if ~exist('cnf','var') || isscalar(cnf)
+    if ~silent
         fprintf( '\nStarting with a random point set.')
-    end
-    if ~exist('N','var')
-        N = 1000;
-    end
-    if ~exist('dim','var')
-        dim = 3;
     end
     cnf = rand(dim,N); 
 else
     [dim, N] = size(cnf);
 end
-if ~exist('s', 'var')
-    s = 4.0;
-end
 switch s
-case 4.0
+    case 4.0
         compute_riesz = @(x) 1./x./x;
     case 2.0
         compute_riesz = @(x) 1./x;
@@ -62,17 +57,18 @@ case 4.0
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Flow cycle parameters
-offset = 18;
+offset = 10;
 if s < dim
     k_value = N-1;  
     repel_steps = 100;
     repel_cycles = 5;
 else
-    k_value = min(6 * dim, N-1);
-    repel_steps = 50;
-    repel_cycles = 20;
+    k_value = min(10 * dim, N-1);
+    repel_steps = 20;
+    repel_cycles = 50;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%% Talk
 if ~exist('silent','var') || ~silent
     fprintf( '\nWe will be minimizing the %3.2f-Riesz energy of %d points on the',s,N)
     fprintf( '\n%d-dimensional unit cube.\n\n', dim-1)
@@ -81,7 +77,7 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
+%% Main
 
 for cycle=1:repel_cycles
     if s>=dim || mod(cycle,3)==1
@@ -112,10 +108,8 @@ for cycle=1:repel_cycles
     end
 end
 
-% [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-% step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
-if dim==3 && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
+if dim==3 && exist('plotit','var') && (plotit)
     pbaspect([1 1 1]);
     colormap(winter)
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
@@ -130,18 +124,22 @@ if ~usejava('desktop') && (plotit=='y' || plotit=='Y' || plotit==1 || plotit == 
     print(mfilename,'-dpdf','-r300','-bestfit')
 end
 
-if ~exist('silent','var') || ~silent || length(dbstack) == 1 
-    fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-    inp = input('','s');
-    if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
-        en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
-        (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
-        (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
-        en = compute_riesz(en);
-        en = sum(sum(en(isfinite(en))));
-        fprintf('The %3.2f-Riesz energy is \t %10.6f\n', s,en)
+%% Output and saving 
+if nargout()>0 || N<50
+    out=cnf;
+else
+    out = "Refusing to output into console; see docstring by calling 'help "...
+        +mfilename+"'";
 end
+
+if saveplot
+    savehere = string(mfilename) + "_s_" + string(s) + "_N_" + string(N);
+    disp("Saving figure to file: " + savehere)
+    print(char(savehere),'-dpdf','-r300','-bestfit')
 end
 
 
-% dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)
+if isstr(saveit)
+    disp("Saving configuration to file: " + saveit)
+    dlmwrite(saveit,cnf','delimiter','\t','precision',10)
+end

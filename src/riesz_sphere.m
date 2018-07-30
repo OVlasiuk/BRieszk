@@ -1,9 +1,10 @@
-function cnf = riesz_sphere(cnf,varargin)
+function out=riesz_sphere(cnf,varargin)
 %RIESZ_SPHERE
 % cnf = riesz_sphere(cnf,'NAME1',VALUE1,...,'NAMEN',VALUEN)
 % Returns a configuration obtained from applying the gradient descent to
 % the given (or random) N-point collection on the unit sphere.
 % Call without input arguments to use the defaults.
+% Large outputs without output arguments (assignment) are suppressed.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
@@ -19,6 +20,10 @@ function cnf = riesz_sphere(cnf,varargin)
 % 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
 %               configuration; default: true
 % 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: true
+% 'saveplot'    pass 'y' or 1, true, etc., to save the plot;
+%               default: false
+% 'saveit'      pass 'string' to save output into a file named 'string';
 %               default: false
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
@@ -29,9 +34,9 @@ function cnf = riesz_sphere(cnf,varargin)
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Initialize variables
-pnames = {'N' 'dim' 'plotit' 'silent'     's' };
-dflts =  {1000  3      true      false    4.0 };
-[N, dim, plotit, silent, s, ~] =...
+pnames={'N' , 'dim' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 's'};
+dflts={1000 , 3     , true     , true     , false    , false      , 4.0};
+[N, dim, plotit, silent, saveit, saveplot, s, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
 if ~exist('cnf','var') || isscalar(cnf)
     if ~silent
@@ -77,11 +82,10 @@ end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 close all;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-% plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',8)
 %% Main
 
 for cycle=1:repel_cycles
-    if s>=dim || cycle==1
+    if (s>=dim) || cycle==1
         [IDX, ~] = knnsearch(cnf', cnf', 'k', k_value+1);
         IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
     end
@@ -108,8 +112,6 @@ for cycle=1:repel_cycles
     end
 end
 
-% [IDX, D] = knnsearch(cnf', cnf', 'k', k_value+1);
-% step = min(D(:,2));
 msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit)
 	colormap white
@@ -124,22 +126,22 @@ else
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
-if ~usejava('desktop') && exist('plotit','var') && (plotit=='y' || plotit=='Y' || plotit==1)
-    print(mfilename,'-dpdf','-r300','-bestfit')
+
+%% Output and saving 
+if nargout()>0 || N<50
+    out=cnf;
+else
+    out = "Refusing to output into console; see helpstring.";
+end
+
+if saveplot
+    savehere = string(mfilename) + "_s_" + string(s) + "_N_" + string(N);
+    disp("Saving figure to file: " + savehere)
+    print(char(savehere),'-dpdf','-r300','-bestfit')
 end
 
 
-% if ~exist('silent','var') || ~silent || length(dbstack) == 1
-%     fprintf('Compute the full Riesz energy of this pointset? [y/N]\n')
-%     inp = input('>> ','s');
-%     if ~isempty(inp) && ((inp=='y') || (inp=='Y') || (inp=='1'))
-%         en =    (cnf(1,:)-cnf(1,:)').*(cnf(1,:)-cnf(1,:)') +...
-%                     (cnf(2,:)-cnf(2,:)').*(cnf(2,:)-cnf(2,:)') +...
-%                     (cnf(3,:)-cnf(3,:)').*(cnf(3,:)-cnf(3,:)');
-%         en = compute_riesz(en);
-%         en = sum(sum(en(isfinite(en))));
-%         fprintf('The %3.2f-Riesz energy is \t %10.8f\n', s,en)
-%     end
-% end
-
-% dlmwrite('cnf.out',cnf','delimiter','\t'); % ,'precision',3)
+if isstr(saveit)
+    disp("Saving configuration to file: " + saveit)
+    dlmwrite(saveit,cnf','delimiter','\t','precision',10)
+end
