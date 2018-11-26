@@ -1,4 +1,4 @@
-function cnf = riesz_shell(cnf,varargin)
+function out = riesz_shell(cnf,varargin)
 %RIESZ_SHELL
 % cnf = riesz_shell(cnf,'NAME1',VALUE1,...,'NAMEN',VALUEN)
 % Returns a configuration obtained from applying the gradient descent to
@@ -6,6 +6,7 @@ function cnf = riesz_shell(cnf,varargin)
 % The inner and outer shell radii are defined by parameters r and R,
 % respectively. The 2n points on the boundaries are held fixed.
 % Call without input arguments to use the defaults.
+% Large outputs without output arguments (assignment) are suppressed.
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points);
@@ -18,15 +19,19 @@ function cnf = riesz_shell(cnf,varargin)
 %               points on each). If cnf is passed, deduced as the mean of
 %               the number of points with the min and max norms; default: 0
 % 'N'           number of points to be generated in the interior of the
-%               shell (ignored if a cnf is passed); default: 20,000
+%               shell (ignored if a cnf is passed); default: 1000
 % 'r', 'R'      radii of the inner and outer boundary spheres; if a cnf
 %               array is passed, r and R are deduced as the min and max
 %               vector norm of the columns of cnf; defaults: 1.0 and 1.2
 % 'dim'         dimension of the ambient space; deduced from the first
 %               dimension of the cnf matrix, if given; default: 3
-% 'plotit'      pass 'y' or 1, true, etc., to plot the produced
+% 'plotit'      pass 'y' or 1, true, etc., to plot the produced 
 %               configuration; default: true
 % 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
+%               default: true
+% 'saveplot'    pass 'y' or 1, true, etc., to save the plot;
+%               default: false
+% 'saveit'      pass 'string' to save output into a file named 'string';
 %               default: false
 % 'analyzeit'	pass 'y' or 1, true, etc., to invoke f_analyzer on the
 %               produced configuration; default: false
@@ -39,10 +44,12 @@ function cnf = riesz_shell(cnf,varargin)
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Initialize variables
-pnames = {'M'   'N'     'r'  'R' 'dim' 'plotit' 'silent' 'analyzeit' 's' };
-dflts =  {0  20000   1.0  1.2   3    true    false    false       4.0 };
-[M, N, r, R, dim, plotit, silent, analyzeit, s, ~] =...
+pnames = {'M' , 'r' , 'R' , 'N'   , 'dim' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 'analyzeit' , 's'};
+dflts  = {0   , 1.0 , 1.2 , 1000 , 3     , true     , true     , false    , false      , false       , 4.0};
+
+[M , r , R , N   , dim , plotit , silent , saveit , saveplot , analyzeit , s ~] =...
     internal.stats.parseArgs(pnames, dflts, varargin{:});
+
 if ~exist('cnf','var') || isscalar(cnf)
     if ~silent
         fprintf( '\nStarting with a random point set.')
@@ -179,4 +186,21 @@ if dim==3 && exist('analyzeit','var') && (analyzeit=='y' || analyzeit=='Y' || an
     f_analyzer(cnf, in_d)
 end
 
-% dlmwrite('cnf.out',cnf','delimiter','\t','precision',10);
+%% Output and saving 
+if nargout()>0 || N<50
+    out=cnf;
+else
+    out = "Refusing to output into console; see helpstring.";
+end
+
+if saveplot
+    savehere = string(mfilename) + "_s_" + string(s) + "_N_" + string(N);
+    disp("Saving figure to file: " + savehere)
+    print(char(savehere),'-dpdf','-r300','-bestfit')
+end
+
+
+if isstr(saveit)
+    disp("Saving configuration to file: " + saveit)
+    dlmwrite(saveit,cnf','delimiter','\t','precision',10)
+end

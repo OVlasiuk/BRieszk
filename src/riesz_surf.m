@@ -1,7 +1,7 @@
 % function cnf = riesz_surf(cnf, surfF, gradF)
 %RIESZ_SURF
 % cnf = riesz_surf(cnf, surfF, gradF)
-% Returns a configuration obtained from applying the gradient descent to
+% Returns a configuration obtained from applying the gradient flow to
 % the given (or random) N-point collection on the implicit surface defined
 % by surfF(x) = 0.
 % Call without input arguments to use the defaults.
@@ -21,15 +21,15 @@
 %   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
 %   pre-coded, or to modify the source below. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
-if nargin == 0
+% if nargin() == 0
     surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
         x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
     gradF = @(x) [...
         2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
         2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
         2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
-    cnf = f_cnfinit(20000, surfF);
-end
+    cnf = f_cnfinit(4000, surfF);
+% end
 
 % pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
 % dflts =  { 0            []      100.0   4.0     false       200    18       true};
@@ -63,7 +63,7 @@ gg = @(x,y,z) [2*x*(x^2 - 5) + 2*x^3
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-N = 40000;
+N = 400;
 N_moving = size(cnf,2);
 
 

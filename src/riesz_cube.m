@@ -63,9 +63,9 @@ if s < dim
     repel_steps = 100;
     repel_cycles = 5;
 else
-    k_value = min(10 * dim, N-1);
+    k_value = min(12 * dim, N-1);
     repel_steps = 20;
-    repel_cycles = 50;
+    repel_cycles = 30;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Talk
@@ -116,7 +116,9 @@ if dim==3 && exist('plotit','var') && (plotit)
     axis vis3d
 else
     if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
+        colormap(winter)
         pbaspect([1 1 1]);
+        daspect([1 1 1]);
         plot(cnf(1,:),cnf(2,:),'.k','MarkerSize',ceil(msize/2))
     end
 end
