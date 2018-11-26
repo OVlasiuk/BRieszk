@@ -1,4 +1,4 @@
-function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF)
+% function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF)
 %SURF_VORONOI
 % [vorFig, triFig] = surf_voronoi(cnf, gradF)
 % Approximate Voronoi diagram on the level surface.
@@ -29,9 +29,12 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF)
 % surfF -- the surface is defined by surfF(x,y,z) == 0;
 % gradF = @(x,y,z) [2*x; 2*y; 2*z];
 
-% crossprod(u, v) = @(u, v) 
+% crossprod(u, v) = @(u, v)
 
-k_value = 5;
+
+
+
+k_value = 25;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
@@ -44,7 +47,7 @@ faces = zeros(10 * k_value * N, 3);         % not a real estimate, of course;
 f_ind = 0;
 %% Triangulate the cnf using surface normals
 for i=1:N
-    nu = null( gradF(cnf(1,i), cnf(2,i), cnf(3,i) )');
+    nu = null( gradF(cnf(:,i))');
     flatNN = nu \ ( cnf(:,i) - cnf(:,IDX(:,i)) );
     tri = delaunayTriangulation(flatNN(1,:)',flatNN(2,:)');
     nbrFaces = tri.vertexAttachments(1);
@@ -94,7 +97,7 @@ C_TriVor = zeros(3*size(faces,1),1);
 fill_i = 0;
 for i=1:N
     adjFaces = T.vertexAttachments{i};
-    nu = null( gradF(cnf(1,i), cnf(2,i), cnf(3,i) )');
+    nu = null( gradF(cnf(:,i) )');
 %   Order the adjacent faces by angles between the centroid and the origin.
     adjVerts = T.ConnectivityList(adjFaces,:);
     adjVertsCoords = cnf(:, adjVerts') - cnf(:, i);
