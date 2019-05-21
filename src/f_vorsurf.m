@@ -1,4 +1,4 @@
-% function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF)
+function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 %SURF_VORONOI
 % [vorFig, triFig] = surf_voronoi(cnf, gradF)
 % Approximate Voronoi diagram on the level surface.
@@ -6,35 +6,32 @@
 % cnf -- 3x(num_pts), the node set to be processed
 % gradF -- a function handle to evaluate the gradient to the surface at
 %   a point (x,y,z);
+% gradF -- a function handle for the density of the distribution, will be
+%           used for coloring the triangulation;
 % OUTPUT:
 % vorFig -- handle to the figure with the surface Voronoi diagram;
 % triFig -- handle to the surface triangulation with vertices at cnf.
 % Both are returned with the .Visible attribute set to 'off'.
 %
+% 
 % EXAMPLE of a configuration on a complicated surface:
 % warning('off','optim:fsolve:NonSquareSystem')
-% f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) + x(3).^2 .*(x(3).^2 - 5) + 11;
+% f = @(x) x(1).^2 .*(x(1).^2 - 5) + x(2).^2 .*(x(2).^2 - 5) +...
+% x(3).^2 .*(x(3).^2 - 5) + 11;
 % N = 1000;
-% x=zeros(3,N);
-% x0 = 5*rand(3,N)-2.5;
-% for i=1:N
-% x(:,i) = fsolve(f, x0(:,i),optimoptions('fsolve','Display','off'));
-% end
+% x=f_cnfinit(N, f);
 % plot3(x(1,:),x(2,:),x(3,:),'.b')
 % pbaspect([1 1 1])
 % daspect([1 1 1])
 % axis vis3d
+% 
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
+pnames = { 'k'};
+dflts =  { 25 };
+[k_value, ~] =...
+     internal.stats.parseArgs(pnames, dflts, varargin{:});
 
-% surfF -- the surface is defined by surfF(x,y,z) == 0;
-% gradF = @(x,y,z) [2*x; 2*y; 2*z];
-
-% crossprod(u, v) = @(u, v)
-
-
-
-
-k_value = 50;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
@@ -146,8 +143,6 @@ axis vis3d
 % camzoom(1.9);
 
 
-% 
-% 
 % % g = @(x,y,z) (1 - z.^2) .* (2* y .* (y.^2 - 3 *x.^2) - 9* z.^2 + 1) + (x.^2 + y.^2).^2;
 % % fs = fimplicit3(g)
 % % axis vis3d
