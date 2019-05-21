@@ -11,15 +11,19 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 % Optional argument name/value pairs:
 % Name          Value
 %
-% 'k'           number of nearest neighbors used; default: 25
+% 'k'           number of nearest neighbors used;
+%               default: 30
+%               NOTE: different sizes of cnf may work better with different k.
+%               There currently is no logic implemented to select k, so if
+%               the Voronoi tessellation contains artifacts, it might be useful
+%               to try other values of k.
 % 'defaults'    pass 'true' to use the default gradient/density;
 %               default: false
-
+%
 % OUTPUT:
 % vorFig -- handle to the figure with the surface Voronoi diagram;
 % triFig -- handle to the surface triangulation with vertices at cnf.
-% Both are returned with the .Visible attribute set to 'off'.
-%
+% NOTE: Both are returned with the .Visible attribute set to 'off'.  
 % 
 % EXAMPLE of a configuration on a complicated surface:
 % warning('off','optim:fsolve:NonSquareSystem')
@@ -35,7 +39,7 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 pnames = { 'k', 'defaults'};
-dflts =  { 25 false };
+dflts =  { 30 false };
 [k_value, defaults, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
 if defaults

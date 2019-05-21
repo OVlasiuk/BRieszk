@@ -7,7 +7,6 @@ function out = riesz_shell(cnf,varargin)
 % respectively. The 2n points on the boundaries are held fixed.
 % Call without input arguments to use the defaults.
 % Large outputs without output arguments (assignment) are suppressed.
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points);
 %   pass ZERO to draw from the random vol-uniform distribution using your
@@ -39,9 +38,8 @@ function out = riesz_shell(cnf,varargin)
 %               default: 4.0
 %   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are
 %   pre-coded, or to modify the source code. Otherwise you'll be using the
-%   Matlab's power function, which turns out to be not that great.
-
-
+%   Matlab's power function, which turns out to be not that great.  
+%
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Initialize variables
 pnames = {'M' , 'r' , 'R' , 'N'   , 'dim' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 'analyzeit' , 's'};

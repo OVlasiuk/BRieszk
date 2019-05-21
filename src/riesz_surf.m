@@ -7,20 +7,27 @@ function cnf = riesz_surf(N, surfF, gradF, varargin)
 % Call without input arguments to use the defaults.
 % NOTE: both surfF and gradF must accept matrices of size (dim)x(#of points)
 %
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-%
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points);
 %        input `edit f_cnfinit.m` in the prompt to see an example of how
 %        such a configuration can be generated (in the BRieszk folder).
 % Optional argument name/value pairs:
 % Name          Value
-% 'silent'      pass 'y' or 1, true, etc., to suppress output to console;
-%               default: false
+%
+% 'moving'      pass the number of nodes to move in this configuration
+%               default: N (move the entire config)
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
+% 'offset'      starting denominator in the iterative stage;
+%               default: 100
+% 'k'           number of nearest neighbors to use;
+%               default: 30
+% 'steps'       number of repel steps to make;
+%               default: 200
 %   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are
 %   pre-coded, or to modify the source below. Otherwise you'll be using the
 %   Matlab's power function, which turns out to be not that great.  
+%
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
 if nargin() < 3
     % EXAMPLE of a density defined by (the absolute value of) the Gaussian
@@ -49,7 +56,7 @@ if nargin() < 3
 end
 
 pnames = { 'moving'   's'  'offset'   'k' 'steps'};
-dflts =  { N          4.0  100        30  500};
+dflts =  { N          4.0  100        30  200};
 [N_moving, s, offset, k_value, repel_steps, ~] =...
 internal.stats.parseArgs(pnames, dflts, varargin{:});
 cycles = 5;
@@ -81,7 +88,7 @@ ngrad = gradF(cnf);
 %% Main loop
 for cycle=1:cycles
     for iter=1:repel_steps
-        if mod(iter,50) == 1
+        if mod(iter,20) == 1
             [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
             IDX = IDX(:,2:end)';
         end

@@ -6,7 +6,6 @@ function out = riesz_torus(cnf, varargin)
 % r <= R.
 % Call without input arguments to use the defaults.
 % Large outputs without output arguments (assignment) are suppressed.
-% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % 
 % cnf -- pass your initial configuration as a matrix (dim)x(#of points); 
 %   pass ZERO to draw a random distribution using your N, dim, r, R, s;
@@ -31,10 +30,10 @@ function out = riesz_torus(cnf, varargin)
 %               default: 4.0
 %   It is HIGHLY recommended to use s from {0.5, 2.0, 4.0}, as these are 
 %   pre-coded, or to modify the source code. Otherwise you'll be using the 
-%   Matlab's power function, which turns out to be not that great.
-
-
+%   Matlab's power function, which turns out to be not that great.  
+%
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
 %% Initialize variables 
 pnames={'N' , 'dim' , 'r' , 'R' , 'plotit' , 'silent' , 'saveit' , 'saveplot' , 's'};
 dflts={1000 , 3     , 1.0 , 3.0 , true     , true     , false    , false      , 4.0};
