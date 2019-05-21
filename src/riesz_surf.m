@@ -22,13 +22,19 @@
 %   pre-coded, or to modify the source below. Otherwise you'll be using the 
 %   Matlab's power function, which turns out to be not that great.
 % if nargin() == 0
-    surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
-        x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
-    gradF = @(x) [...
-        2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
-        2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
-        2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
-    cnf = f_cnfinit(4000, surfF);
+N = 20000;
+    surfF = @(x)    (x(1,:).^2 - 4).^2 +...
+                    (x(2,:).^2 - 4).^2 +...
+                    (x(3,:).^2 - 4).^2 + ...
+                  3*(x(1,:).^2.*x(2,:).^2 +...
+                     x(1,:).^2.*x(3,:).^2 +...
+                     x(2,:).^2.*x(3,:).^2) + ...
+                  6*x(1,:).*x(2,:).*x(3,:) - ...
+                 10*(x(1,:).^2 + x(2,:).^2 + x(3,:).^2) + 21;
+    gradF = @(x) [  4*x(1,:).*(x(1,:).^2 - 4) + 6*(x(1,:).*x(2,:).^2 + x(1,:).*x(3,:).^2) + 6*x(2,:).*x(3,:) - 20*x(1,:);
+                    4*x(2,:).*(x(2,:).^2 - 4) + 6*(x(2,:).*x(1,:).^2 + x(2,:).*x(3,:).^2) + 6*x(1,:).*x(3,:) - 20*x(2,:);
+                    4*x(3,:).*(x(3,:).^2 - 4) + 6*(x(3,:).*x(1,:).^2 + x(3,:).*x(2,:).^2) + 6*x(1,:).*x(2,:) - 20*x(3,:)];
+    cnf = f_cnfinit(N, surfF);
 % end
 
 % pnames = { 'jitter' 'pullback' 'A'     's'     'histogram' 'bins' 'offset' 'instats'};
@@ -54,21 +60,23 @@ complementedlaplacianF = @(x) [...
 
 squaredgradientF = @(x) gradF(x).^2;
 
-densityF = @(x)  sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
-    sum(squaredgradientF(x), 1).^2;
+densityF = @(x) x(3,:).^2;
+% sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
+%     sum(squaredgradientF(x), 1).^2;
 
-gg = @(x,y,z) [2*x*(x^2 - 5) + 2*x^3
-2*y*(y^2 - 5) + 2*y^3
-2*z*(z^2 - 5) + 2*z^3];
+% gg = @(x,y,z) [2*x*(x^2 - 5) + 2*x^3
+% 2*y*(y^2 - 5) + 2*y^3
+% 2*z*(z^2 - 5) + 2*z^3];
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-N = 400;
+% N = 400;
 N_moving = size(cnf,2);
 
 
 s = 4.0;
-repel_steps = 1000;
+cycles = 10;
+repel_steps = 100;
 dim = 3;
 offset = 100;
 k_value = 30;
@@ -93,48 +101,50 @@ end
 tic
 ngrad = gradF(cnf);
 %% Main loop
-for iter=1:repel_steps
-    if mod(iter,10) == 1
-        [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
-        IDX = IDX(:,2:end)';
+for cycle=1:cycles
+    for iter=1:repel_steps
+        if mod(iter,50) == 1
+            [IDX, ~] = knnsearch(cnf', cnf(:,1:N_moving)', 'k', k_value+1);
+            IDX = IDX(:,2:end)';
+        end
+    %% Vectors from nearest neighbors    
+        cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
+        knn_cnf = cnf(:,IDX);
+        knn_differences = cnf_repeated - knn_cnf;    
+        knn_norms_squared = sum(knn_differences.*knn_differences,1); 
+    %% Weights using radial density
+        riesz_weights = compute_riesz(knn_norms_squared);
+        if isa(densityF,'function_handle')
+            knn_density =  abs(densityF(knn_cnf)) + .1;   
+            weights = s* riesz_weights ./ knn_norms_squared ./ knn_density;
+        else
+            weights = s*riesz_weights./knn_norms_squared;
+        end
+    %% Sum up over the nearest neighbors    
+        gradient = bsxfun(@times,weights,knn_differences);
+        gradient = reshape(gradient, dim, k_value, []);
+        gradient = reshape(sum(gradient,2), dim, []);
+    %     
+        surfnormals = ngrad./sqrt(sum(ngrad.*ngrad,1));
+        tangentgrad = gradient - surfnormals .* sum(gradient.*surfnormals, 1);
+        if mod(iter,50) == 1
+            tangentgradnorm = sqrt(max(sum(tangentgrad .* tangentgrad, 1)))  
+        end
+    % 
+        directions = tangentgrad./sqrt(sum(tangentgrad.*tangentgrad,1)); 
+        step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
+        cnf_tentative = cnf(:,1:N_moving) +...
+                                directions(:,1:N_moving).*step/(offset+iter-1); 
+    %% Pullback to surface
+        h =   surfF(cnf_tentative) ; 
+        ngrad = gradF(cnf_tentative);
+        while max(abs( h )) > 1e-4 
+             cnf_tentative = cnf_tentative - ngrad .* h ./ sum(ngrad .* ngrad, 1);
+             h =   surfF(cnf_tentative)  ;
+             ngrad = gradF(cnf_tentative);
+        end
+        cnf = cnf_tentative;
     end
-%% Vectors from nearest neighbors    
-    cnf_repeated = reshape(repmat(cnf(:,1:N_moving),k_value,1),dim,[]);
-    knn_cnf = cnf(:,IDX);
-    knn_differences = cnf_repeated - knn_cnf;    
-    knn_norms_squared = sum(knn_differences.*knn_differences,1); 
-%% Weights using radial density
-    riesz_weights = compute_riesz(knn_norms_squared);
-    if isa(densityF,'function_handle')
-        knn_density =  abs(densityF(knn_cnf)) + .1;   
-        weights = s* riesz_weights ./ knn_norms_squared ./ knn_density;
-    else
-        weights = s*riesz_weights./knn_norms_squared;
-    end
-%% Sum up over the nearest neighbors    
-    gradient = bsxfun(@times,weights,knn_differences);
-    gradient = reshape(gradient, dim, k_value, []);
-    gradient = reshape(sum(gradient,2), dim, []);
-%     
-    surfnormals = ngrad./sqrt(sum(ngrad.*ngrad,1));
-    tangentgrad = gradient - surfnormals .* sum(gradient.*surfnormals, 1);
-    if mod(iter,50) == 1
-        tangentgradnorm = sqrt(max(sum(tangentgrad .* tangentgrad, 1)))  
-    end
-% 
-    directions = tangentgrad./sqrt(sum(tangentgrad.*tangentgrad,1)); 
-    step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
-    cnf_tentative = cnf(:,1:N_moving) +...
-                            directions(:,1:N_moving).*step/(offset+iter-1); 
-%% Pullback to surface
-    h =   surfF(cnf_tentative) ; 
-    ngrad = gradF(cnf_tentative);
-    while max(abs( h )) > 1e-4    
-         cnf_tentative = cnf_tentative - ngrad .* h ./ sum(ngrad .* ngrad, 1);
-         h =   surfF(cnf_tentative)  ;
-         ngrad = gradF(cnf_tentative);
-    end
-    cnf = cnf_tentative;
 end
 toc
 

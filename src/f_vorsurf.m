@@ -34,7 +34,7 @@
 
 
 
-k_value = 25;
+k_value = 50;
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 
