@@ -49,8 +49,8 @@ if defaults
         (12*x(1,:).*x(1,:) - 10) .* (12*x(2,:).*x(2,:) - 10)...
         ];
     squaredgradientF = @(x) gradF(x).^2;
-    densityF = @(x)  abs(sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
-        sum(squaredgradientF(x), 1).^2) + 0.1;
+    densityF = @(x)  sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
+        sum(squaredgradientF(x), 1).^2;
 end
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
