@@ -8,6 +8,13 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 %   a point (x,y,z);
 % gradF -- a function handle for the density of the distribution, will be
 %           used for coloring the triangulation;
+% Optional argument name/value pairs:
+% Name          Value
+%
+% 'k'           number of nearest neighbors used; default: 25
+% 'defaults'    pass 'true' to use the default gradient/density;
+%               default: false
+
 % OUTPUT:
 % vorFig -- handle to the figure with the surface Voronoi diagram;
 % triFig -- handle to the surface triangulation with vertices at cnf.
@@ -27,11 +34,24 @@ function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 % 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 
-pnames = { 'k'};
-dflts =  { 25 };
-[k_value, ~] =...
+pnames = { 'k', 'defaults'};
+dflts =  { 25 false };
+[k_value, defaults, ~] =...
      internal.stats.parseArgs(pnames, dflts, varargin{:});
-
+if defaults
+    gradF = @(x) [...
+        2*x(1,:).*(x(1,:).*x(1,:) - 5) + 2*x(1,:).^3;
+        2*x(2,:).*(x(2,:).*x(2,:) - 5) + 2*x(2,:).^3;
+        2*x(3,:).*(x(3,:).*x(3,:) - 5) + 2*x(3,:).^3];
+    complementedlaplacianF = @(x) [...
+        (12*x(2,:).*x(2,:) - 10) .* (12*x(3,:).*x(3,:) - 10);
+        (12*x(1,:).*x(1,:) - 10) .* (12*x(3,:).*x(3,:) - 10);
+        (12*x(1,:).*x(1,:) - 10) .* (12*x(2,:).*x(2,:) - 10)...
+        ];
+    squaredgradientF = @(x) gradF(x).^2;
+    densityF = @(x)  abs(sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
+        sum(squaredgradientF(x), 1).^2) + 0.1;
+end
 N = size(cnf,2);
 msize = ceil(max(1, 22-6*log10(size(cnf,2)) ));
 

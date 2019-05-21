@@ -52,6 +52,7 @@ pnames = { 'moving'   's'  'offset'   'k' 'steps'};
 dflts =  { N          4.0  100        30  500};
 [N_moving, s, offset, k_value, repel_steps, ~] =...
 internal.stats.parseArgs(pnames, dflts, varargin{:});
+cycles = 5;
 
 % cnf = dlmread('../cnf40k_3.txt')';
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -92,7 +93,7 @@ for cycle=1:cycles
         %% Weights using radial density
         riesz_weights = compute_riesz(knn_norms_squared);
         if isa(densityF,'function_handle')
-            knn_density =  abs(densityF(knn_cnf)) + .1;   
+            knn_density =  densityF(knn_cnf);   
             weights = s* riesz_weights ./ knn_norms_squared ./ knn_density;
         else
             weights = s*riesz_weights./knn_norms_squared;
@@ -104,9 +105,9 @@ for cycle=1:cycles
         %     
         surfnormals = ngrad./sqrt(sum(ngrad.*ngrad,1));
         tangentgrad = gradient - surfnormals .* sum(gradient.*surfnormals, 1);
-        if mod(iter,50) == 1
-            tangentgradnorm = sqrt(max(sum(tangentgrad .* tangentgrad, 1)))  
-        end
+%         if mod(iter,50) == 1
+%             tangentgradnorm = sqrt(max(sum(tangentgrad .* tangentgrad, 1)));  
+%         end
         % 
         directions = tangentgrad./sqrt(sum(tangentgrad.*tangentgrad,1)); 
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
