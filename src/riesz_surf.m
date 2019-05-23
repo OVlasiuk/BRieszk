@@ -1,20 +1,28 @@
-function cnf = riesz_surf(N, surfF, gradF, varargin)
+function cnf = riesz_surf(cnf, surfF, gradF, densityF, varargin)
 %RIESZ_SURF
-% cnf = riesz_surf(cnf, surfF, gradF)
-% Returns a configuration obtained from applying the gradient flow to
+% cnf = riesz_surf(cnf, surfF, gradF, densityF,...)
+% OR
+% cnf = riesz_surf(N, surfF, gradF, densityF,...)
+% Returns a configuration obtained by applying the gradient flow to
 % the given (or random) N-point collection on the implicit surface defined
 % by surfF(x) = 0.
 % Call without input arguments to use the defaults.
-% NOTE: both surfF and gradF must accept matrices of size (dim)x(#of points)
 %
-% cnf -- pass your initial configuration as a matrix (dim)x(#of points);
-%        input `edit f_cnfinit.m` in the prompt to see an example of how
-%        such a configuration can be generated (in the BRieszk folder).
+% INPUT:
+% cnf   -- given configuration as a matrix (dim)x(#of points);
+% N     -- number of points to be initialized randomly;
+% surfF -- a function handle to the function defining the surface;
+% gradF -- a function handle to evaluate the gradient to the surface at
+%          the collection of points cnf;
+% NOTE: use surfnorm to compute normals numerically.
+% NOTE: both surfF and gradF must accept matrices of size (dim)x(#of points)
+% densityF -- a function handle to evaluate density on the surface;
+% 
 % Optional argument name/value pairs:
 % Name          Value
 %
 % 'moving'      pass the number of nodes to move in this configuration
-%               default: N (move the entire config)
+%               default: N (move all nodes)
 % 's'           the exponent used in the Riesz kernel;
 %               default: 4.0
 % 'offset'      starting denominator in the iterative stage;
@@ -28,13 +36,24 @@ function cnf = riesz_surf(N, surfF, gradF, varargin)
 %   Matlab's power function, which turns out to be not that great.  
 %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
-
+if isscalar(cnf)
+    N = cnf;
+    cnf = f_cnfinit(N, surfF);
+else
+    N = size(cnf,2);
+    temp = abs(surfF(cnf));
+    if max(temp) > 1e-4
+        disp("Error: some of the points do not lie on the surface surfF(·) = 0!")
+        return
+    end
+end
 if nargin() < 3
     % EXAMPLE of a density defined by (the absolute value of) the Gaussian
     % curvature:
     % Goldman, R. (2005). Curvature formulas for implicit curves and surfaces.
     % Computer Aided Geometric Design, 22(7), 632–658.
     % doi:10.1016/j.cagd.2005.06.005
+    disp("Incomplete input, using the default surface!")
     surfF = @(x) x(1,:).^2 .*(x(1,:).^2 - 5) + x(2,:).^2 .*(x(2,:).^2 - 5) +...
     x(3,:).^2 .*(x(3,:).^2 - 5) + 11;
     gradF = @(x) [...
@@ -50,10 +69,10 @@ if nargin() < 3
     densityF = @(x)  abs(sum(complementedlaplacianF(x).* squaredgradientF(x), 1)./ ...
     sum(squaredgradientF(x), 1).^2) + 0.1;
     if nargin == 0
-        N =  1000;
-    end
-    cnf = f_cnfinit(N, surfF);
+        cnf =  1000;
+    end  
 end
+
 
 pnames = { 'moving'   's'  'offset'   'k' 'steps'};
 dflts =  { N          4.0  100        30  200};

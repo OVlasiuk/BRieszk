@@ -1,13 +1,14 @@
 function [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF, varargin)
 %SURF_VORONOI
-% [vorFig, triFig] = surf_voronoi(cnf, gradF)
+% [vorFig, triFig] = f_vorsurf(cnf, gradF, densityF,...)
 % Approximate Voronoi diagram on the level surface.
 % INPUT:
-% cnf -- 3x(num_pts), the node set to be processed
+% cnf   -- given configuration
 % gradF -- a function handle to evaluate the gradient to the surface at
-%   a point (x,y,z);
-% gradF -- a function handle for the density of the distribution, will be
-%           used for coloring the triangulation;
+%          the collection of points cnf;
+% NOTE: use surfnorm to compute normals numerically.
+% densityF -- a function handle to evaluate density on the surface;
+%  
 % Optional argument name/value pairs:
 % Name          Value
 %
