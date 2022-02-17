@@ -59,13 +59,11 @@ end
 %% Flow cycle parameters
 offset = 10;
 if s < dim
-    k_value = N-1;  
-    repel_steps = 100;
-    repel_cycles = 5;
+    k_value = 2;
+    repel_cycles = 600;
 else
-    k_value = min(12 * dim, N-1);
-    repel_steps = 20;
-    repel_cycles = 30;
+    k_value = 2;
+    repel_cycles = 200;
 end
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Talk
@@ -79,41 +77,71 @@ close all;
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 %% Main
 
-for cycle=1:repel_cycles
-    if s>=dim || mod(cycle,3)==1
+
         [IDX, ~] = knnsearch(cnf', cnf', 'k', k_value+1);
         IDX = IDX(:,2:end)';             % drop the trivial first column in IDX
-    end
-    tic
-    for iter=1:repel_steps*cycle
+
         cnf_repeated = reshape(repmat(cnf,k_value,1),dim,[]);
         knn_differences = cnf_repeated - cnf(:,IDX);
         knn_norms_squared = sum(knn_differences.*knn_differences,1);
-        riesz_weights = compute_riesz(knn_norms_squared)./knn_norms_squared;
+        energy = compute_riesz(knn_norms_squared);
+        energy_old_sum = sum(sum(energy));
+        
+for cycle=1:repel_cycles
+        riesz_weights = energy./knn_norms_squared;
+        
         gradient = bsxfun(@times,riesz_weights,knn_differences);
         gradient = reshape(gradient, dim, k_value, []);
         gradient = reshape(sum(gradient,2), dim, []);
-        %         tangents = gradient-bsxfun(@times,sum(cnf.*gradient,1),cnf); 
-        % computing scalar products like so only works because we are on 
-        % the unit sphere
-        gradient = gradient./(sqrt(sum(gradient.^2,1)));
+        gradnorms = (sqrt(sum(gradient.^2,1)));
+        
+        mask = gradnorms > 1e-3;
+        gradient = gradient./gradnorms;
         step = sqrt(min(reshape(knn_norms_squared,k_value,[]),[],1));
-        %         alpha = min(1, step./sqrt(sum(tangents.*tangents,1)));
-        cnf = cnf + gradient .* step/(offset+iter);
-        cnf(cnf>1) = 2-cnf(cnf>1);
-        cnf(cnf<0) = -cnf(cnf<0);
-    end
-    if ~exist('silent','var') || ~silent
-        toc
-    end
+
+%         backtracking begins
+        flag_larger = 1;
+        expand = 0;
+        factor = 1;
+        counter = 0;
+        while (flag_larger || expand) && (counter < 20)      
+            cnf_new = cnf + mask .* gradient .* step .* factor ; %/(offset+iter);
+            cnf_new(cnf_new>1) = 2-cnf_new(cnf_new>1);
+            cnf_new(cnf_new<0) = -cnf_new(cnf_new<0);
+
+            [IDX, ~] = knnsearch(cnf_new', cnf_new', 'k', k_value+1);
+            IDX = IDX(:,2:end)'; 
+
+            cnf_repeated = reshape(repmat(cnf_new,k_value,1),dim,[]);
+            knn_differences = cnf_repeated - cnf_new(:,IDX);
+            knn_norms_squared = sum(knn_differences.*knn_differences,1);
+            energy = compute_riesz(knn_norms_squared);
+            energy_new_sum = sum(sum(energy));
+
+            if energy_new_sum < energy_old_sum
+                cnf = cnf_new;
+                factor = (sqrt(2)-1) * factor;
+                energy_old_sum = energy_new_sum;
+                
+                flag_larger = 0;
+                expand = 1;
+            elseif ~expand
+                factor = factor / 2;
+            else
+                break
+            end
+            counter = counter + 1;
+        end
 end
 
-msize = ceil(max(1, 22-3.5*log10(size(cnf,2)) ));
+
+msize = ceil(max(1, 28-3.5*log10(size(cnf,2)) ));
 if dim==3 && exist('plotit','var') && (plotit)
     pbaspect([1 1 1]);
     colormap(winter)
     plot3(cnf(1,:),cnf(2,:),cnf(3,:),'.k','MarkerSize',msize)
     axis vis3d
+
 else
     if dim==2 && exist('plotit','var') &&(plotit=='y' || plotit=='Y' || plotit==1)
         colormap(winter)
